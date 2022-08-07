@@ -17,8 +17,8 @@ struct MacroNode {
     struct MacroNode* next;
 };
 
-void ReadFirstWordInLine(char line[], char word[]);
-int CheckForMacroStatement(char line[], int *isMacroDefinitionDefenition);
+void ReadFirstWordInLine(char line[], char *word);
+int CheckForMacroStatement(char line[], int *isMacroDefinition);
 int ParseMacros(int i, char *argv[]);//,struct MacroNode *head);
 void AddMacroNameToTable(char line[], struct MacroNode *currMacro);
 void AddLineToMacroContent(char line[], struct MacroNode *currMacro);

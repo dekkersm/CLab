@@ -3,7 +3,7 @@
 //
 #include "preprocessor.h"
 
-void ReadFirstWordInLine(char line[], char word[])
+void ReadFirstWordInLine(char line[], char *word)
 {
     int lineIndex = 0;
     int wordIndex = 0;
@@ -148,14 +148,10 @@ int checkIfLineIsADefinedMacro(char line[], struct MacroNode *macroListHead, FIL
 
     ReadFirstWordInLine(line, firstWord);
 
-    printf("%s\n", firstWord);
-
     while(temp!=NULL)
     {
-        printf("%s\n", temp->name);
         if(!strcmp(temp->name, firstWord))
         {
-            printf("%s", firstWord);
             fprintf(amSourceFile, "%s", temp->content);
             return 1;
         }
