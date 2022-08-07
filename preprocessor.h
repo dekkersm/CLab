@@ -12,13 +12,16 @@
 #include "globals.h"
 
 struct MacroNode {
-    char mname[MAX_CHARS_IN_LINE];
-    char mcontent[MAX_CHARS_IN_LINE];
+    char name[MAX_CHARS_IN_LINE];
+    char content[MAX_CHARS_IN_LINE * MAX_LINES_IN_MACRO];
     struct MacroNode* next;
 };
 
-void ReadFirstWord(char line[], char word[]);
-void CheckForMacro(char line[], int *isMacro);
+void ReadFirstWordInLine(char line[], char word[]);
+int CheckForMacroStatement(char line[], int *isMacroDefinitionDefenition);
 int ParseMacros(int i, char *argv[]);//,struct MacroNode *head);
+void AddMacroNameToTable(char line[], struct MacroNode *currMacro);
+void AddLineToMacroContent(char line[], struct MacroNode *currMacro);
+int checkIfLineIsADefinedMacro(char line[], struct MacroNode *macroListHead, FILE *amSourceFile);
 
 #endif //MAMAN14_PREPROCESSOR_H
