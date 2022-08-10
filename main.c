@@ -2,5 +2,5 @@
 #include "preprocessor.h"
 
 int main(int argc, char *argv[]) {
-    int i = ParseMacros(1, argv);
+    int i = ParseMacros(argv[1]);
 }

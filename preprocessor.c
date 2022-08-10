@@ -2,24 +2,7 @@
 // Created by dekke on 09/07/2022.
 //
 #include "preprocessor.h"
-
-void ReadFirstWordInLine(char line[], char *word)
-{
-    int lineIndex = 0;
-    int wordIndex = 0;
-
-    while(isspace(line[lineIndex]))
-    {
-        lineIndex++;
-    }
-
-    while(!isspace(line[lineIndex]))
-    {
-        word[wordIndex] = line[lineIndex];
-        lineIndex++;
-        wordIndex++;
-    }
-}
+#include "utils.h"
 
 // Returns 1 if any macro statement is found, and changes the given macro flag
 int CheckForMacroStatement(char line[], int *isMacroDefinition)
@@ -40,7 +23,7 @@ int CheckForMacroStatement(char line[], int *isMacroDefinition)
     return 0;
 }
 
-int ParseMacros(int i, char *argv[])//, struct MacroNode *head)
+int ParseMacros(char *sourceFileName)
 {
     char line [MAX_CHARS_IN_LINE];
     memset(line , '\0' , MAX_CHARS_IN_LINE);
@@ -56,17 +39,17 @@ int ParseMacros(int i, char *argv[])//, struct MacroNode *head)
 
     // Opening the original source file
     FILE *sourceFile;
-    sourceFile = fopen(argv[i],"r");
+    sourceFile = fopen(sourceFileName,"r");
     if(sourceFile == NULL)
     {
-        printf("ERROR: can't open the file: %s \n \n" , argv[i]);
+        printf("ERROR: can't open the file: %s \n \n" , sourceFileName);
         return 1;
     }
 
     // Creating the new file
     FILE *amSourceFile;
     char amFileName[MAX_CHARS_IN_FILE_NAME];
-    strcpy(amFileName, argv[i]);
+    strcpy(amFileName, sourceFileName);
     strncat(amFileName, ".am", 4);
     amSourceFile = fopen(amFileName,"w");
 
