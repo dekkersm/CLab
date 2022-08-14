@@ -6,6 +6,7 @@
 
 int IC = 0;
 int DC = 0;
+int lineCounter = 0;
 short instructionsArray[MEMORY_ARRAY_WORD_SIZE];
 short dataArray[MEMORY_ARRAY_WORD_SIZE];
 
@@ -87,11 +88,11 @@ int parseCommand(char *cmd, Command *currCmd)
 void parseAssemblyLines(FILE *amFile, SymbolNode symbolTable)
 {
     int isCodeValid = 1; // Where any errors found
-    int lineCounter = 0;
 
     // Initializing the memory arrays and counters
     IC = 0;
     DC = 0;
+    lineCounter = 0;
     memset(instructionsArray, 0, MEMORY_ARRAY_WORD_SIZE);
     memset(dataArray, 0, MEMORY_ARRAY_WORD_SIZE);
 
@@ -100,8 +101,8 @@ void parseAssemblyLines(FILE *amFile, SymbolNode symbolTable)
 
     while(fgets(currLine, MAX_CHARS_IN_LINE, amFile))
     {
-        printf("line %d\n", lineCounter);
         lineCounter++;
+        printf("line :%d, ", lineCounter);
         parseLine(currLine, symbolTable);
     }
 
@@ -182,11 +183,11 @@ int classifyGuidingType(char *currLine, enum GuidingType *guidingType)
     }
     else if(!strcmp(dataTypeName, ".extern"))
     {
-        *guidingType = external;
+        *guidingType = externalType;
     }
     else if(!strcmp(dataTypeName, ".entry"))
     {
-        *guidingType = entry;
+        *guidingType = entryType;
     }
     else // if not any of the data types return false
     {
@@ -196,20 +197,31 @@ int classifyGuidingType(char *currLine, enum GuidingType *guidingType)
     return 1;
 }
 
+char* getExternOperand(char *externLine)
+{
+    char *externOperand;
+    externOperand = strtok(externLine, " \t\n"); // Dummy Read for the first word in line
+    externOperand = strtok(NULL, " \t\n");
+
+    return externOperand;
+}
+
 void parseLine(char *currLine, SymbolNode symbolTable)
 {
     if(!isEmptyOrCommentLine(currLine))
     {
+        char *currSymbol;
         int isSymbolDeclared = 0;
-        char firstWord[SYMBOL_MAX_CHAR_LENGTH];
-        memset(firstWord, '\0', SYMBOL_MAX_CHAR_LENGTH);
-        readFirstWordInLine(currLine, firstWord);
+        char firstWordInCurrLine[SYMBOL_MAX_CHAR_LENGTH];
+        memset(firstWordInCurrLine, '\0', SYMBOL_MAX_CHAR_LENGTH);
+        readFirstWordInLine(currLine, firstWordInCurrLine);
 
-        if (isSymbolDeclaration(firstWord)) {
-            printf("symbol\n");
+        if (isSymbolDeclaration(firstWordInCurrLine)) {
             // Slice the symbol declaration from the line for further parsing as normal line
+            currSymbol = strtok(firstWordInCurrLine, ":");
             currLine = strchr(currLine, ':')+1;
             isSymbolDeclared = 1;
+            printf("line symbol:%s, ", currSymbol);
         }
 
         // Checking if the line is a guiding line or instruction
@@ -219,15 +231,25 @@ void parseLine(char *currLine, SymbolNode symbolTable)
             enum GuidingType guidingType;
             if (classifyGuidingType(currLine, &guidingType))
             {
-                if (guidingType == entry || guidingType == external)
+                if (guidingType == entryType || guidingType == externalType)
                 {
+                    if(guidingType==externalType)
+                    {
+                        char *externOperand = getExternOperand(currLine);
+                        if(externOperand)
+                        {
+                            printf("extern param: %s, ", externOperand);
+                            addSymbolNode(symbolTable, externOperand, 0, external, 0);
+                        }
+                        // TODO: error raise on extern dont have operand
+                    }
                 }
                 // Data types::::
                 else
                 {
                     if (isSymbolDeclared) {
-                        // TODO: insert symbol to table with DC
-                        // if already in table - error assert
+                        addSymbolNode(symbolTable, currSymbol, DC, data, 1);
+                        // TODO: if already in table - error assert
                     }
 
                     // TODO: insert data to dataArray and increase DC

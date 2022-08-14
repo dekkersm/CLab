@@ -9,17 +9,24 @@
 #include "globals.h"
 #include "string.h"
 
+enum SymbolType {
+    external = 0,
+    data = 1,
+    code = 2,
+    entry = 3
+};
+
 struct SymbolTable
 {
     char name[SYMBOL_MAX_CHAR_LENGTH];
     int value;
-    char type[SYMBOL_MAX_CHAR_LENGTH]; // external/entry/Data/Code
+    enum SymbolType type; // external/entry/Data/Code
     int isRelocatable;
     struct SymbolTable* next;
 };
 
 typedef struct SymbolTable *SymbolNode; //Define node as pointer of data type struct LinkedList
 SymbolNode createSymbolNode();
-SymbolNode addSymbolNode(SymbolNode head, char *name, int value, char *type, int isRelocatable);
+SymbolNode addSymbolNode(SymbolNode head, char *name, int value, enum SymbolType type, int isRelocatable);
 
 #endif //MAMAN14_DATASTRUCTS_H

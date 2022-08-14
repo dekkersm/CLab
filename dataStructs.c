@@ -11,14 +11,13 @@ SymbolNode createSymbolNode(){
     return temp;//return the new node
 }
 
-SymbolNode addSymbolNode(SymbolNode head, char *name, int value, char *type, int isRelocatable)
+SymbolNode addSymbolNode(SymbolNode head, char *name, int value, enum SymbolType type, int isRelocatable)
 {
-    SymbolNode temp,p;// declare two nodes temp and p
-    temp = createSymbolNode();//createNode will return a new node with data = value and next pointing to NULL.
-// TODO: add error assert when symbol already exists
+    SymbolNode temp,p;
+    temp = createSymbolNode();
     temp->value = value;
     temp->isRelocatable = isRelocatable;
-    strcpy(temp->type, type);
+    temp->type = type;
     strcpy(temp->name, name);
 
     if(head == NULL)
@@ -27,8 +26,9 @@ SymbolNode addSymbolNode(SymbolNode head, char *name, int value, char *type, int
     }
     else
     {
-        p  = head;//assign head to p
+        p  = head;
         while(p->next != NULL){
+            // TODO: Check if name exists already
             p = p->next;//traverse the list until p is the last node.The last node always points to NULL.
         }
         p->next = temp;//Point the previous last node to the new node created.

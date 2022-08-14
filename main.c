@@ -15,16 +15,16 @@ int main(int argc, char *argv[]) {
 
     // Initializing the symbol table to null
     SymbolNode table = NULL;
-    table = addSymbolNode(table, "prn", 300, "ext", 1);
+    table = addSymbolNode(table, "prn", 300, external, 1);
+
+    parseAssemblyLines(sourceFile, table);
 
     SymbolNode p;
     p = table;
     while(p != NULL){
-        printf("name: %s, value: %d, type: %s, is: %d", p->name, p->value, p->type, p->isRelocatable);
+        printf("name: %s, value: %d, type: %d, is: %d\n", p->name, p->value, p->type, p->isRelocatable);
         p = p->next;
     }
-
-    parseAssemblyLines(sourceFile, table);
 
     fclose(sourceFile);
 }

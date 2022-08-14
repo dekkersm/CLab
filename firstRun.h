@@ -23,8 +23,8 @@ enum GuidingType {
     dataType = 0,
     stringType = 1,
     structType = 2,
-    external = 3,
-    entry = 4
+    externalType = 3,
+    entryType = 4
 };
 
 typedef struct {
