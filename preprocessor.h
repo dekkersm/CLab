@@ -5,11 +5,10 @@
 #ifndef MAMAN14_PREPROCESSOR_H
 #define MAMAN14_PREPROCESSOR_H
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "globals.h"
+#include "utils.h"
 
 struct MacroNode {
     char name[MAX_CHARS_IN_LINE];

@@ -5,8 +5,10 @@
 #ifndef MAMAN14_UTILS_H
 #define MAMAN14_UTILS_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 
-void ReadFirstWordInLine(char line[], char *word);
+void readFirstWordInLine(char line[], char *word);
 
 #endif //MAMAN14_UTILS_H

@@ -2,7 +2,6 @@
 // Created by dekke on 09/07/2022.
 //
 #include "preprocessor.h"
-#include "utils.h"
 
 // Returns 1 if any macro statement is found, and changes the given macro flag
 int CheckForMacroStatement(char line[], int *isMacroDefinition)
@@ -10,7 +9,7 @@ int CheckForMacroStatement(char line[], int *isMacroDefinition)
     char firstWord[MAX_CHARS_IN_LINE];
     memset(firstWord , '\0' , MAX_CHARS_IN_LINE);
 
-    ReadFirstWordInLine(line, firstWord);
+    readFirstWordInLine(line, firstWord);
 
     if (!strcmp(firstWord, "macro")) {
         *isMacroDefinition = 1;
@@ -99,8 +98,10 @@ int ParseMacros(char *sourceFileName)
             }
         }
     }
-    printf("name: %s", head->name);
-    printf("content: \n%s", head->content);
+
+    fclose(sourceFile);
+    fclose(amSourceFile);
+
     return 0;
 }
 
@@ -129,7 +130,7 @@ int checkIfLineIsADefinedMacro(char line[], struct MacroNode *macroListHead, FIL
 
     struct MacroNode* temp = macroListHead;
 
-    ReadFirstWordInLine(line, firstWord);
+    readFirstWordInLine(line, firstWord);
 
     while(temp!=NULL)
     {

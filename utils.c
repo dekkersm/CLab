@@ -3,17 +3,17 @@
 //
 #include "utils.h"
 
-void ReadFirstWordInLine(char line[], char *word)
+void readFirstWordInLine(char line[], char *word)
 {
     int lineIndex = 0;
     int wordIndex = 0;
 
-    while(isspace(line[lineIndex]))
+    while(isspace(line[lineIndex]) && line[lineIndex] != '\0')
     {
         lineIndex++;
     }
 
-    while(!isspace(line[lineIndex]))
+    while(!isspace(line[lineIndex]) && line[lineIndex] != '\0')
     {
         word[wordIndex] = line[lineIndex];
         lineIndex++;
