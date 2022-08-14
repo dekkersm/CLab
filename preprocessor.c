@@ -99,6 +99,7 @@ int ParseMacros(char *sourceFileName)
         }
     }
 
+    fprintf(amSourceFile, "%c", '\n'); // new line in end of file
     fclose(sourceFile);
     fclose(amSourceFile);
 

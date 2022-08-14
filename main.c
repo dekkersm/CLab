@@ -22,10 +22,9 @@ int main(int argc, char *argv[]) {
     SymbolNode p;
     p = table;
     while(p != NULL){
-        printf("name: %s, value: %d, type: %d, is: %d\n", p->name, p->value, p->type, p->isRelocatable);
+        printf("\nname: %s, value: %d, type: %d, is: %d\n", p->name, p->value, p->type, p->isRelocatable);
         p = p->next;
     }
 
-    printf("is: %d", stringToInt("14"));
     fclose(sourceFile);
 }

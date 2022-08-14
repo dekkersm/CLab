@@ -48,3 +48,28 @@ int stringToInt(char *number)
 
     return intNumber * sign;
 }
+
+int convertBase(int number,int base){
+    if(number == 0 || base==10)
+        return number;
+    return (number % base) + 10*convertBase(number / base, base);
+}
+
+void toBase32(int number, char *numIn32)
+{
+//    char numString[100];
+//    sprintf(numString, "%d", number);
+//    int i =0;
+//    while(numString[i]!='\0')
+//    {
+//        char currChar = '\0';
+//
+//        switch (numString[i]) {
+//            case '!': strncat(numIn32, &currChar, 1); break;
+//            default: break;
+//        }
+//
+//        i++;
+//    }
+//    printf("%s\n", numIn32);
+}

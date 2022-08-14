@@ -22,67 +22,98 @@ int parseCommand(char *cmd, Command *currCmd)
     if(!strcmp(cmd, "mov")){
         currCmd->opcode = 0;
         currCmd->operandCount = 2;
-
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "cmp")) {
         currCmd->opcode = 1;
         currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
     }
     else if(!strcmp(cmd, "add")){
         currCmd->opcode = 2;
         currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "sub")){
         currCmd->opcode = 3;
         currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "not")){
         currCmd->opcode = 4;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "clr")){
         currCmd->opcode = 5;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "lea")){
         currCmd->opcode = 6;
         currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,1,1,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "inc")){
         currCmd->opcode = 7;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "dec")){
         currCmd->opcode = 8;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "jmp")){
         currCmd->opcode = 9;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "bne")){
         currCmd->opcode = 10;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "get")){
         currCmd->opcode = 11;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "prn")){
         currCmd->opcode = 12;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
     }
     else if(!strcmp(cmd, "jsr")){
         currCmd->opcode = 13;
         currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
     }
     else if(!strcmp(cmd, "rts")){
         currCmd->opcode = 14;
         currCmd->operandCount = 0;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
     }
     else if(!strcmp(cmd, "hlt")){
         currCmd->opcode = 15;
         currCmd->operandCount = 0;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
     }
     else
     {
@@ -108,7 +139,7 @@ void parseAssemblyLines(FILE *amFile, SymbolNode symbolTable)
     while(fgets(currLine, MAX_CHARS_IN_LINE, amFile))
     {
         lineCounter++;
-        printf("line :%d, ", lineCounter);
+        printf("\nline :%d, ", lineCounter);
         parseLine(currLine, symbolTable);
     }
 
@@ -244,7 +275,7 @@ void parseLine(char *currLine, SymbolNode symbolTable)
                         parseExternLine(currLine, symbolTable);
                     }
                 }
-                // Data types::::
+                // Data types Handling
                 else
                 {
                     if (isSymbolDeclared) {
@@ -258,7 +289,6 @@ void parseLine(char *currLine, SymbolNode symbolTable)
                         default: break;
                     }
                 }
-                printf("guiding data type : %d\n", guidingType);
             }
             else
             {
@@ -268,8 +298,7 @@ void parseLine(char *currLine, SymbolNode symbolTable)
         else
         {
             if (isSymbolDeclared) {
-                // insert symbol to table with IC
-                // if already in table - error assert
+                addSymbolNode(symbolTable, currSymbol, IC, code, 1);
             }
 
             char cmdName[SYMBOL_MAX_CHAR_LENGTH];
@@ -280,19 +309,25 @@ void parseLine(char *currLine, SymbolNode symbolTable)
 
             if (parseCommand(cmdName, currCmd))
             {
-                printf("instruction\n");
+                printf("instruction");
+
+                parseInstructionLine(currLine, currCmd);
                 int L = 0;
                 // parse the instruction and compute L
                 // build the first binary word of the instruction
 
 //                IC = IC + L;
             }
+            else
+            {
+                // TODO: error in the cmd name
+            }
         }
     }
     else
     {
 
-        printf("empty line\n");
+        printf("empty line");
     }
 
 }
@@ -368,6 +403,7 @@ void parseStringTypeLine(char *currLine)
         {
             printf("/0 ");
             appendToDataArray('\0');
+            isInString = ~isInString;
         }
         else if(isInString)
         {
@@ -430,15 +466,16 @@ void parseStructTypeLine(char *currLine)
         {
             printf("/0 ");
             appendToDataArray('\0');
+            isInString = ~isInString;
         }
         else if(isInString)
         {
-            printf("%c ", currLine[lineIndex]);
+            printf("char:%c ", currLine[lineIndex]);
             appendToDataArray(currLine[lineIndex]);
         }
         else if(!isspace(currLine[lineIndex]))
         {
-            printf("ERROR in struct string ");
+            printf("ERROR in struct string");
             // TODO: error raise
         }
         lineIndex++;
@@ -454,4 +491,46 @@ void parseExternLine(char *currLine, SymbolNode symbolTable)
         addSymbolNode(symbolTable, externOperand, 0, external, 0);
     }
     // TODO: error raise on extern dont have operand
+}
+
+int parseInstructionLine(char *currLine, Command *currCmd)
+{
+    int L = 1;
+    char *firstOperand = strtok(currLine, ", \t\n"); // Dummy read of the instruction name
+    firstOperand = strtok(NULL, ", \t\n");
+    char *secondOperand = strtok(NULL, ", \t\n");
+
+    // TODO: Error raise in case operand count is wrong
+    switch (currCmd->operandCount) {
+        case 0: if(firstOperand || secondOperand) { printf("error");} break;
+        case 1: if(!firstOperand || secondOperand) { printf("error");} break;
+        case 2: if(!firstOperand || !secondOperand) { printf("error");} break;
+        default: break;
+    }
+
+    if(firstOperand != NULL) {
+        parseOperand(firstOperand, currCmd->sourceOpLegalAddressMethods, &L);
+    }
+
+    if(secondOperand != NULL) {
+        parseOperand(secondOperand, currCmd->destOpLegalAddressMethods, &L);
+    }
+
+    printf("1operand: %s, ", firstOperand);
+    printf("2operand: %s, ", secondOperand);
+
+    return L;
+}
+
+void parseOperand(char *operand, AddressingMethod addressingMethod, int *L)
+{
+    int wordIndex = 0;
+    while(operand[wordIndex] != '\0')
+    {
+        if(operand[wordIndex] == '#')
+        {
+            
+        }
+        wordIndex++;
+    }
 }
