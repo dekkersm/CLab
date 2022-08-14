@@ -10,5 +10,6 @@
 #include <ctype.h>
 
 void readFirstWordInLine(char line[], char *word);
+int stringToInt(char *number);
 
 #endif //MAMAN14_UTILS_H

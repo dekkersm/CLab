@@ -10,6 +10,7 @@
 #include "globals.h"
 #include "utils.h"
 
+// TODO: make it good
 struct MacroNode {
     char name[MAX_CHARS_IN_LINE];
     char content[MAX_CHARS_IN_LINE * MAX_LINES_IN_MACRO];

@@ -38,4 +38,10 @@ int parseCommand(char *cmd, Command *currCmd);
 void parseAssemblyLines(FILE *amFile, SymbolNode symbolTable);
 void parseLine(char *currLine, SymbolNode symbolTable);
 
+// Guiding line parsing
+void parseDataTypeLine(char *currLine);
+void parseStringTypeLine(char *currLine);
+void parseStructTypeLine(char *currLine);
+void parseExternLine(char *currLine, SymbolNode symbolTable);
+
 #endif //MAMAN14_FIRSTRUN_H

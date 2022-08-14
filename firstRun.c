@@ -10,6 +10,12 @@ int lineCounter = 0;
 short instructionsArray[MEMORY_ARRAY_WORD_SIZE];
 short dataArray[MEMORY_ARRAY_WORD_SIZE];
 
+void appendToDataArray(short data)
+{
+    dataArray[DC] = data;
+    DC++;
+}
+
 int parseCommand(char *cmd, Command *currCmd)
 {
     int success = 1;
@@ -235,13 +241,7 @@ void parseLine(char *currLine, SymbolNode symbolTable)
                 {
                     if(guidingType==externalType)
                     {
-                        char *externOperand = getExternOperand(currLine);
-                        if(externOperand)
-                        {
-                            printf("extern param: %s, ", externOperand);
-                            addSymbolNode(symbolTable, externOperand, 0, external, 0);
-                        }
-                        // TODO: error raise on extern dont have operand
+                        parseExternLine(currLine, symbolTable);
                     }
                 }
                 // Data types::::
@@ -249,10 +249,14 @@ void parseLine(char *currLine, SymbolNode symbolTable)
                 {
                     if (isSymbolDeclared) {
                         addSymbolNode(symbolTable, currSymbol, DC, data, 1);
-                        // TODO: if already in table - error assert
                     }
 
-                    // TODO: insert data to dataArray and increase DC
+                    switch (guidingType) {
+                        case dataType: parseDataTypeLine(currLine); break;
+                        case stringType: parseStringTypeLine(currLine); break;
+                        case structType: parseStructTypeLine(currLine); break;
+                        default: break;
+                    }
                 }
                 printf("guiding data type : %d\n", guidingType);
             }
@@ -291,4 +295,163 @@ void parseLine(char *currLine, SymbolNode symbolTable)
         printf("empty line\n");
     }
 
+}
+
+void parseDataTypeLine(char *currLine)
+{
+    int lineIndex = 0;
+    char currNum[MAX_CHARS_IN_DATA_NUM];
+    memset(currNum, '\0', MAX_CHARS_IN_DATA_NUM);
+
+    int wasComma = 0;
+    int stopSign = 0;
+
+    // Skip the .data declaration
+    while(isspace(currLine[lineIndex]))
+    {
+        lineIndex++;
+    }
+    lineIndex += strlen(".data");
+
+    while(!stopSign)
+    {
+        if(currLine[lineIndex] == ',' && !wasComma) {
+            int operandNum = stringToInt(currNum);
+            printf("num is: %d ", operandNum);
+            appendToDataArray((short) operandNum);
+            wasComma = 1;
+            memset(currNum, '\0', MAX_CHARS_IN_DATA_NUM);
+        }
+        else if(isdigit(currLine[lineIndex]) || currLine[lineIndex] == '-' || currLine[lineIndex] == '+')
+        {
+            wasComma = 0;
+            strncat(currNum, &currLine[lineIndex], 1);
+        }
+        else if(currLine[lineIndex] == '\n' && !wasComma)
+        {
+            int operandNum = stringToInt(currNum);
+            printf("num is: %d ", operandNum);
+            appendToDataArray((short) operandNum);
+            stopSign = 1;
+        }
+        else if(!isspace(currLine[lineIndex]))
+        {
+            printf("ERROR in data ");
+            // TODO: ERROR RAISE
+        }
+        lineIndex++;
+    }
+}
+
+void parseStringTypeLine(char *currLine)
+{
+    int lineIndex = 0;
+    char string[MAX_CHARS_IN_LINE];
+    memset(string, '\0', MAX_CHARS_IN_LINE);
+
+    // Skip the .string declaration
+    while(isspace(currLine[lineIndex]))
+    {
+        lineIndex++;
+    }
+    lineIndex += strlen(".string");
+
+    int isInString = 0;
+
+    while(currLine[lineIndex] != '\n')
+    {
+        if(!isInString && currLine[lineIndex] == '"')
+        {
+            isInString = ~isInString;
+        }
+        else if(isInString && currLine[lineIndex] == '"')
+        {
+            printf("/0 ");
+            appendToDataArray('\0');
+        }
+        else if(isInString)
+        {
+            printf("%c ", currLine[lineIndex]);
+            appendToDataArray(currLine[lineIndex]);
+        }
+        else if(!isspace(currLine[lineIndex]))
+        {
+            printf("ERROR in string ");
+            // TODO: error raise
+        }
+        lineIndex++;
+    }
+}
+
+void parseStructTypeLine(char *currLine)
+{
+    int lineIndex = 0;
+    char currNum[MAX_CHARS_IN_DATA_NUM];
+    memset(currNum, '\0', MAX_CHARS_IN_DATA_NUM);
+    char string[MAX_CHARS_IN_LINE];
+    memset(string, '\0', MAX_CHARS_IN_LINE);
+
+    // Skip the .struct declaration
+    while(isspace(currLine[lineIndex]))
+    {
+        lineIndex++;
+    }
+    lineIndex += strlen(".struct");
+
+    while (currLine[lineIndex] != ',')
+    {
+        if(isdigit(currLine[lineIndex]) || currLine[lineIndex] == '-' || currLine[lineIndex] == '+')
+        {
+            strncat(currNum, &currLine[lineIndex], 1);
+        }
+        else if(!isspace(currLine[lineIndex]))
+        {
+            //error raise
+        }
+        lineIndex++;
+    }
+
+    // append the read num to the array
+    int operandNum = stringToInt(currNum);
+    printf("struct num is: %d ", operandNum);
+    appendToDataArray((short) operandNum);
+
+    // Start the string handling
+    lineIndex++; // For the un-read comma
+    int isInString = 0;
+
+    while(currLine[lineIndex] != '\n')
+    {
+        if(!isInString && currLine[lineIndex] == '"')
+        {
+            isInString = ~isInString;
+        }
+        else if(isInString && currLine[lineIndex] == '"')
+        {
+            printf("/0 ");
+            appendToDataArray('\0');
+        }
+        else if(isInString)
+        {
+            printf("%c ", currLine[lineIndex]);
+            appendToDataArray(currLine[lineIndex]);
+        }
+        else if(!isspace(currLine[lineIndex]))
+        {
+            printf("ERROR in struct string ");
+            // TODO: error raise
+        }
+        lineIndex++;
+    }
+}
+
+void parseExternLine(char *currLine, SymbolNode symbolTable)
+{
+    char *externOperand = getExternOperand(currLine);
+    if(externOperand)
+    {
+        printf("extern param: %s, ", externOperand);
+        addSymbolNode(symbolTable, externOperand, 0, external, 0);
+    }
+    // TODO: error raise on extern dont have operand
 }

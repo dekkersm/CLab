@@ -26,5 +26,6 @@ int main(int argc, char *argv[]) {
         p = p->next;
     }
 
+    printf("is: %d", stringToInt("14"));
     fclose(sourceFile);
 }
