@@ -146,7 +146,19 @@ void parseAssemblyLines(FILE *amFile, SymbolNode symbolTable)
 
     if(isCodeValid)
     {
-      // update the data in symbol table
+        // Going over the symbol table and adding the first address in memory to the counter, plus adding the IC to the data symbols
+        SymbolNode p;
+        p = symbolTable;
+        while(p != NULL){
+            if(p->type == data){
+                p->value += IC + FIRST_ADDRESS_IN_OBJ_FILE;
+            }
+            else if(p->type == code) {
+                p->value += FIRST_ADDRESS_IN_OBJ_FILE;
+            }
+            printf("\nname: %s, value: %d, type: %d, is: %d\n", p->name, p->value, p->type, p->isRelocatable);
+            p = p->next;
+        }
       // and start run 2
     }
 
@@ -293,7 +305,7 @@ void parseLine(char *currLine, SymbolNode symbolTable)
             }
             else
             {
-                // TODO: invalid guiding line
+                // TODO: ERROR invalid guiding line
             }
         }
         else
@@ -312,12 +324,9 @@ void parseLine(char *currLine, SymbolNode symbolTable)
             {
                 printf("instruction, ");
 
-                parseInstructionLine(currLine, currCmd, symbolTable);
-                int L = 0;
                 // parse the instruction and compute L
-                // build the first binary word of the instruction
-
-//                IC = IC + L;
+                int L = parseInstructionLine(currLine, currCmd, symbolTable);
+                IC = IC + L;
             }
             else
             {
@@ -327,10 +336,8 @@ void parseLine(char *currLine, SymbolNode symbolTable)
     }
     else
     {
-
         printf("empty line");
     }
-
 }
 
 void parseDataTypeLine(char *currLine)
@@ -520,7 +527,9 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
     if(firstOperandString != NULL) {
         firstOperand = parseOperand(firstOperandString, symbolTable);
         if(checkAddressingMethodValidity(firstOperand->addressingMethod,
-                                         (currCmd->operandCount == 2 ? currCmd->sourceOpLegalAddressMethods : currCmd->destOpLegalAddressMethods)))
+                                         (currCmd->operandCount == 2 ?
+                                         currCmd->sourceOpLegalAddressMethods :
+                                         currCmd->destOpLegalAddressMethods)))
         {
             short addressingMethod;
             switch (firstOperand->type) {
@@ -576,7 +585,9 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
         }
     }
 
+    // Appending the first instruction word to the instruction array
     printf("word in memory %d", currInstructionWord);
+    instructionsArray[IC] = currInstructionWord;
 
     return L;
 }
