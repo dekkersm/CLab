@@ -1,0 +1,736 @@
+//
+// Created by dekke on 08/08/2022.
+//
+#include "string.h"
+#include "firstRun.h"
+
+int IC = 0;
+int DC = 0;
+int lineCounter = 0;
+int isFirstRun = 1;
+short instructionsArray[MEMORY_ARRAY_WORD_SIZE];
+short dataArray[MEMORY_ARRAY_WORD_SIZE];
+
+void appendToDataArray(short data)
+{
+    dataArray[DC] = data;
+    DC++;
+}
+
+int parseCommand(char *cmd, Command *currCmd)
+{
+    int success = 1;
+    if(!strcmp(cmd, "mov")){
+        currCmd->opcode = 0;
+        currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "cmp")) {
+        currCmd->opcode = 1;
+        currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+    }
+    else if(!strcmp(cmd, "add")){
+        currCmd->opcode = 2;
+        currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "sub")){
+        currCmd->opcode = 3;
+        currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "not")){
+        currCmd->opcode = 4;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "clr")){
+        currCmd->opcode = 5;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "lea")){
+        currCmd->opcode = 6;
+        currCmd->operandCount = 2;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,1,1,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "inc")){
+        currCmd->opcode = 7;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "dec")){
+        currCmd->opcode = 8;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "jmp")){
+        currCmd->opcode = 9;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "bne")){
+        currCmd->opcode = 10;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "get")){
+        currCmd->opcode = 11;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "prn")){
+        currCmd->opcode = 12;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){1,1,1,1};
+    }
+    else if(!strcmp(cmd, "jsr")){
+        currCmd->opcode = 13;
+        currCmd->operandCount = 1;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,1,1,1};
+    }
+    else if(!strcmp(cmd, "rts")){
+        currCmd->opcode = 14;
+        currCmd->operandCount = 0;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+    }
+    else if(!strcmp(cmd, "hlt")){
+        currCmd->opcode = 15;
+        currCmd->operandCount = 0;
+        currCmd->sourceOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+        currCmd->destOpLegalAddressMethods = (AddressingMethod){0,0,0,0};
+    }
+    else
+    {
+        success = 0;
+    }
+    return success;
+}
+
+void parseAssemblyLines(FILE *amFile, SymbolNode symbolTable)
+{
+    int isCodeValid = 1; // Where any errors found
+
+    // Initializing the memory arrays and counters
+    IC = 0;
+    DC = 0;
+    lineCounter = 0;
+    memset(instructionsArray, 0, MEMORY_ARRAY_WORD_SIZE);
+    memset(dataArray, 0, MEMORY_ARRAY_WORD_SIZE);
+
+    char currLine[MAX_CHARS_IN_LINE];
+    memset(currLine , '\0' , MAX_CHARS_IN_LINE);
+
+    while(fgets(currLine, MAX_CHARS_IN_LINE, amFile))
+    {
+        lineCounter++;
+        printf("\nline :%d, ", lineCounter);
+        parseLine(currLine, symbolTable);
+    }
+
+    if(isCodeValid)
+    {
+        // Going over the symbol table and adding the first address in memory to the counter, plus adding the IC to the data symbols
+        SymbolNode p;
+        p = symbolTable;
+        while(p != NULL){
+            if(p->type == data){
+                p->value += IC + FIRST_ADDRESS_IN_OBJ_FILE;
+            }
+            else if(p->type == code) {
+                p->value += FIRST_ADDRESS_IN_OBJ_FILE;
+            }
+            printf("\nname: %s, value: %d, type: %d, is: %d\n", p->name, p->value, p->type, p->isRelocatable);
+            p = p->next;
+        }
+      // and start run 2
+    }
+
+    // errors where found - halt operation
+}
+
+int isEmptyOrCommentLine(char *currLine)
+{
+    int lineIndex = 0;
+    if(currLine[lineIndex] == ';')
+    {
+        return 1;
+    }
+
+    while(isspace(currLine[lineIndex]))
+    {
+        if(currLine[lineIndex] == '\0')
+            return 1;
+        lineIndex++;
+    }
+    return 0;
+}
+
+int isSymbolDeclaration(char *firstWord)
+{
+    int wordIndex = 0;
+    if(isalpha(firstWord[wordIndex]))
+    {
+        wordIndex++;
+        while(isalnum(firstWord[wordIndex]))
+        {
+            wordIndex++;
+        }
+        if(firstWord[wordIndex] == ':')
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int isGuidingLine(char const *currLine)
+{
+    int lineIndex = 0;
+
+    while(isspace(currLine[lineIndex]))
+    {
+        lineIndex++;
+    }
+
+    return currLine[lineIndex] == '.';
+}
+
+int classifyGuidingType(char *currLine, enum GuidingType *guidingType)
+{
+    char dataTypeName[SYMBOL_MAX_CHAR_LENGTH];
+    memset(dataTypeName, '\0', SYMBOL_MAX_CHAR_LENGTH);
+    readFirstWordInLine(currLine, dataTypeName);
+
+    if(!strcmp(dataTypeName, ".data"))
+    {
+        *guidingType = dataType;
+    }
+    else if(!strcmp(dataTypeName, ".string"))
+    {
+        *guidingType = stringType;
+    }
+    else if(!strcmp(dataTypeName, ".struct"))
+    {
+        *guidingType = structType;
+    }
+    else if(!strcmp(dataTypeName, ".extern"))
+    {
+        *guidingType = externalType;
+    }
+    else if(!strcmp(dataTypeName, ".entry"))
+    {
+        *guidingType = entryType;
+    }
+    else // if not any of the data types return false
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+char* getExternOperand(char *externLine)
+{
+    char *externOperand;
+    externOperand = strtok(externLine, " \t\n"); // Dummy Read for the first word in line
+    externOperand = strtok(NULL, " \t\n");
+
+    return externOperand;
+}
+
+void parseLine(char *currLine, SymbolNode symbolTable)
+{
+    if(!isEmptyOrCommentLine(currLine))
+    {
+        char *currSymbol;
+        int isSymbolDeclared = 0;
+        char firstWordInCurrLine[SYMBOL_MAX_CHAR_LENGTH];
+        memset(firstWordInCurrLine, '\0', SYMBOL_MAX_CHAR_LENGTH);
+        readFirstWordInLine(currLine, firstWordInCurrLine);
+
+        if (isSymbolDeclaration(firstWordInCurrLine)) {
+            // Slice the symbol declaration from the line for further parsing as normal line
+            currSymbol = strtok(firstWordInCurrLine, ":");
+            currLine = strchr(currLine, ':')+1;
+            isSymbolDeclared = 1;
+            printf("line symbol:%s, ", currSymbol);
+        }
+
+        // Checking if the line is a guiding line or instruction
+        if(isGuidingLine(currLine))
+        {
+            // Classify the type of guiding line, if not found raise error
+            enum GuidingType guidingType;
+            if (classifyGuidingType(currLine, &guidingType))
+            {
+                if (guidingType == entryType || guidingType == externalType)
+                {
+                    if(guidingType==externalType)
+                    {
+                        parseExternLine(currLine, symbolTable);
+                    }
+                }
+                // Data types Handling
+                else
+                {
+                    if (isSymbolDeclared) {
+                        addSymbolNode(symbolTable, currSymbol, DC, data, 1);
+                    }
+
+                    switch (guidingType) {
+                        case dataType: parseDataTypeLine(currLine); break;
+                        case stringType: parseStringTypeLine(currLine); break;
+                        case structType: parseStructTypeLine(currLine); break;
+                        default: break;
+                    }
+                }
+            }
+            else
+            {
+                // TODO: ERROR invalid guiding line
+            }
+        }
+        else
+        {
+            if (isSymbolDeclared) {
+                addSymbolNode(symbolTable, currSymbol, IC, code, 1);
+            }
+
+            char cmdName[SYMBOL_MAX_CHAR_LENGTH];
+            memset(cmdName, '\0', SYMBOL_MAX_CHAR_LENGTH);
+            readFirstWordInLine(currLine, cmdName);
+
+            Command *currCmd = (Command*)malloc(sizeof(Command));
+
+            if (parseCommand(cmdName, currCmd))
+            {
+                printf("instruction, ");
+
+                // parse the instruction and compute L
+                int L = parseInstructionLine(currLine, currCmd, symbolTable);
+                IC = IC + L;
+            }
+            else
+            {
+                // TODO: error in the cmd name
+            }
+        }
+    }
+    else
+    {
+        printf("empty line");
+    }
+}
+
+void parseDataTypeLine(char *currLine)
+{
+    int lineIndex = 0;
+    char currNum[MAX_CHARS_IN_DATA_NUM];
+    memset(currNum, '\0', MAX_CHARS_IN_DATA_NUM);
+
+    int wasComma = 0;
+    int stopSign = 0;
+
+    // Skip the .data declaration
+    while(isspace(currLine[lineIndex]))
+    {
+        lineIndex++;
+    }
+    lineIndex += strlen(".data");
+
+    while(!stopSign)
+    {
+        if(currLine[lineIndex] == ',' && !wasComma) {
+            int operandNum = stringToInt(currNum);
+            printf("num is: %d ", operandNum);
+            appendToDataArray((short) operandNum);
+            wasComma = 1;
+            memset(currNum, '\0', MAX_CHARS_IN_DATA_NUM);
+        }
+        else if(isdigit(currLine[lineIndex]) || currLine[lineIndex] == '-' || currLine[lineIndex] == '+')
+        {
+            wasComma = 0;
+            strncat(currNum, &currLine[lineIndex], 1);
+        }
+        else if(currLine[lineIndex] == '\n' && !wasComma)
+        {
+            int operandNum = stringToInt(currNum);
+            printf("num is: %d ", operandNum);
+            appendToDataArray((short) operandNum);
+            stopSign = 1;
+        }
+        else if(!isspace(currLine[lineIndex]))
+        {
+            printf("ERROR in data ");
+            // TODO: ERROR RAISE
+        }
+        lineIndex++;
+    }
+}
+
+void parseStringTypeLine(char *currLine)
+{
+    int lineIndex = 0;
+    char string[MAX_CHARS_IN_LINE];
+    memset(string, '\0', MAX_CHARS_IN_LINE);
+
+    // Skip the .string declaration
+    while(isspace(currLine[lineIndex]))
+    {
+        lineIndex++;
+    }
+    lineIndex += strlen(".string");
+
+    int isInString = 0;
+
+    while(currLine[lineIndex] != '\n')
+    {
+        if(!isInString && currLine[lineIndex] == '"')
+        {
+            isInString = ~isInString;
+        }
+        else if(isInString && currLine[lineIndex] == '"')
+        {
+            printf("/0 ");
+            appendToDataArray('\0');
+            isInString = ~isInString;
+        }
+        else if(isInString)
+        {
+            printf("%c ", currLine[lineIndex]);
+            appendToDataArray(currLine[lineIndex]);
+        }
+        else if(!isspace(currLine[lineIndex]))
+        {
+            printf("ERROR in string ");
+            // TODO: error raise
+        }
+        lineIndex++;
+    }
+}
+
+void parseStructTypeLine(char *currLine)
+{
+    int lineIndex = 0;
+    char currNum[MAX_CHARS_IN_DATA_NUM];
+    memset(currNum, '\0', MAX_CHARS_IN_DATA_NUM);
+    char string[MAX_CHARS_IN_LINE];
+    memset(string, '\0', MAX_CHARS_IN_LINE);
+
+    // Skip the .struct declaration
+    while(isspace(currLine[lineIndex]))
+    {
+        lineIndex++;
+    }
+    lineIndex += strlen(".struct");
+
+    while (currLine[lineIndex] != ',')
+    {
+        if(isdigit(currLine[lineIndex]) || currLine[lineIndex] == '-' || currLine[lineIndex] == '+')
+        {
+            strncat(currNum, &currLine[lineIndex], 1);
+        }
+        else if(!isspace(currLine[lineIndex]))
+        {
+            //error raise
+        }
+        lineIndex++;
+    }
+
+    // append the read num to the array
+    int operandNum = stringToInt(currNum);
+    printf("struct num is: %d ", operandNum);
+    appendToDataArray((short) operandNum);
+
+    // Start the string handling
+    lineIndex++; // For the un-read comma
+    int isInString = 0;
+
+    while(currLine[lineIndex] != '\n')
+    {
+        if(!isInString && currLine[lineIndex] == '"')
+        {
+            isInString = ~isInString;
+        }
+        else if(isInString && currLine[lineIndex] == '"')
+        {
+            printf("/0 ");
+            appendToDataArray('\0');
+            isInString = ~isInString;
+        }
+        else if(isInString)
+        {
+            printf("char:%c, ", currLine[lineIndex]);
+            appendToDataArray(currLine[lineIndex]);
+        }
+        else if(!isspace(currLine[lineIndex]))
+        {
+            printf("ERROR in struct string");
+            // TODO: error raise
+        }
+        lineIndex++;
+    }
+}
+
+void parseExternLine(char *currLine, SymbolNode symbolTable)
+{
+    char *externOperand = getExternOperand(currLine);
+    if(externOperand)
+    {
+        printf("extern param: %s, ", externOperand);
+        addSymbolNode(symbolTable, externOperand, 0, external, 0);
+    }
+    // TODO: error raise on extern dont have operand
+}
+
+int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTable)
+{
+    int L = 1;
+    short currInstructionWord = 0;
+    currInstructionWord |= absolute << ARE_WORD_OFFSET;
+    currInstructionWord |= currCmd->opcode << OPCODE_WORD_OFFSET;
+
+    char *firstOperandString = strtok(currLine, ", \t\n"); // Dummy read of the instruction name
+    firstOperandString = strtok(NULL, ", \t\n");
+    char *destOperandString = strtok(NULL, ", \t\n");
+
+    // TODO: Error raise in case operand count is wrong
+    switch (currCmd->operandCount) {
+        case 0: if(firstOperandString || destOperandString) { printf("error");} break;
+        case 1: if(!firstOperandString || destOperandString) { printf("error");} break;
+        case 2: if(!firstOperandString || !destOperandString) { printf("error");} break;
+        default: break;
+    }
+
+    Operand *firstOperand;
+    Operand *destOperand;
+    int wasRegister = 0;
+
+    if(firstOperandString != NULL) {
+        firstOperand = parseOperand(firstOperandString, symbolTable);
+        if(checkAddressingMethodValidity(firstOperand->addressingMethod,
+                                         (currCmd->operandCount == 2 ?
+                                         currCmd->sourceOpLegalAddressMethods :
+                                         currCmd->destOpLegalAddressMethods)))
+        {
+            short addressingMethod;
+            switch (firstOperand->type) {
+                case num : L+=1; addressingMethod = 0; break;
+                case symbol: L+=1; addressingMethod = 1; break;
+                case struc: L+=2; addressingMethod = 2; break;
+                case reg:
+                {
+                    L+=1;
+                    addressingMethod = 3;
+                    wasRegister = 1;
+                    break;
+                }
+                default: break;
+            }
+
+            if(currCmd->operandCount == 2) {
+                currInstructionWord |= addressingMethod << SRC_OPERAND_WORD_OFFSET;
+            }
+            else if(currCmd->operandCount == 1)
+            {
+                currInstructionWord |= addressingMethod << DEST_OPERAND_WORD_OFFSET;
+            }
+        }
+        else
+        {
+            // TODO: illegal operand addressing method
+        }
+    }
+
+    if(destOperandString != NULL) {
+        destOperand = parseOperand(destOperandString, symbolTable);
+        if(checkAddressingMethodValidity(destOperand->addressingMethod, currCmd->sourceOpLegalAddressMethods))
+        {
+            short addressingMethod;
+            switch (destOperand->type) {
+                case num : L+=1; addressingMethod = 0; break;
+                case symbol: L+=1; addressingMethod = 1; break;
+                case struc: L+=2; addressingMethod = 2; break;
+                case reg:
+                {
+                    addressingMethod = 3;
+                    if(!wasRegister) L+=1;
+                    break;
+                }
+                default: break;
+            }
+            currInstructionWord |= addressingMethod << DEST_OPERAND_WORD_OFFSET;
+        }
+        else
+        {
+            // TODO: illegal operand addressing method
+        }
+    }
+
+    // Appending the first instruction word to the instruction array
+    printf("word in memory %d", currInstructionWord);
+    instructionsArray[IC] = currInstructionWord;
+
+    return L;
+}
+
+int checkAddressingMethodValidity(AddressingMethod operandAM, AddressingMethod legalAM)
+{
+    return ((operandAM.direct && legalAM.direct) ||
+            (operandAM.immediate && legalAM.immediate) ||
+            (operandAM.directRegister && legalAM.directRegister) ||
+            (operandAM.structIndex && legalAM.structIndex));
+}
+
+Operand* parseOperand(char *operand, SymbolNode symbolTable)
+{
+    int wordIndex = 0;
+    int operandValue;
+
+    Operand* currOperand = (Operand*)malloc(sizeof(Operand));
+
+    // Checking if the operand is a number
+    if(operand[wordIndex] == '#')
+    {
+        wordIndex++;
+        char operandNumValue[MAX_CHARS_IN_DATA_NUM];
+        memset(operandNumValue, '\0', MAX_CHARS_IN_DATA_NUM);
+        if(operand[wordIndex] == '-' || operand[wordIndex] == '+' || isdigit(operand[wordIndex]))
+        {
+            strncat(operandNumValue, &operand[wordIndex], 1);
+            wordIndex++;
+            while (operand[wordIndex] != '\0' && isdigit(operand[wordIndex]))
+            {
+                strncat(operandNumValue, &operand[wordIndex], 1);
+                wordIndex++;
+            }
+
+            if(operand[wordIndex] != '\0')
+            {
+                //error not a num
+            }
+            else {
+                operandValue = stringToInt(operandNumValue);
+                printf("operand number is: %d, ", operandValue);
+                currOperand->value = operandValue;
+                currOperand->type = num;
+                currOperand->addressingMethod = (AddressingMethod){1,0,0,0};
+            }
+        }
+        else
+        {
+            // error raise - invalid number operand
+        }
+    }
+    // Checking if the operand is a register
+    else if(operand[wordIndex] == 'r' && isdigit(operand[wordIndex+1])) {
+        // register - check which register
+        wordIndex++;
+        int regNum = operand[wordIndex] - '0';
+        if (0 <= regNum && regNum <= 7) {
+            operandValue = regNum;
+            printf("reg name is:%d, ", operandValue);
+            currOperand->value = operandValue;
+            currOperand->type = reg;
+            currOperand->addressingMethod = (AddressingMethod) {0, 0, 0, 1};
+        } else {
+            // error invalid register number
+        }
+    }
+    // check if the operand is a symbol
+    else {
+        char operandSymbolName[SYMBOL_MAX_CHAR_LENGTH];
+        memset(operandSymbolName, '\0', SYMBOL_MAX_CHAR_LENGTH);
+        SymbolNode currSymbol = createSymbolNode();
+
+        while (operand[wordIndex] != '\0' && isalnum(operand[wordIndex]))
+        {
+            strncat(operandSymbolName, &operand[wordIndex], 1);
+            wordIndex++;
+        }
+
+        if(operand[wordIndex] == '.' && isdigit(operand[wordIndex+1]))
+        {
+            wordIndex++;
+            int structField = operand[wordIndex] - '0';
+            if(structField == 1 || structField == 2)
+            {
+                currSymbol = getSymbolByName(symbolTable, operandSymbolName);
+                if(currSymbol) {
+                    currOperand->value = currSymbol->value;
+                    currOperand->fieldValue = structField;
+                    currOperand->type = struc;
+                    currOperand->addressingMethod = (AddressingMethod) {0, 0, 1, 0};
+                    printf("struct name is:%s, ", operandSymbolName);
+                }
+                else
+                {
+                    if(isFirstRun)
+                    {
+                        currOperand->value = 0;
+                        currOperand->fieldValue = structField;
+                        currOperand->type = struc;
+                        currOperand->addressingMethod = (AddressingMethod) {0, 0, 1, 0};
+                        printf("struct name is:%s, ", operandSymbolName);
+                    }
+                    else
+                    {
+                        // Error undefined struct
+                    }
+                }
+            }
+            else
+            {
+                // error wrong struct field
+            }
+        }
+        else if(operand[wordIndex] == '\0')
+        {
+            currSymbol = getSymbolByName(symbolTable, operandSymbolName);
+            if(currSymbol) {
+                currOperand->value = currSymbol->value;
+                currOperand->type = symbol;
+                currOperand->addressingMethod = (AddressingMethod) {0, 1, 0, 0};
+                printf("symbol name is:%s, ", operandSymbolName);
+            }
+            else
+            {
+                if(isFirstRun)
+                {
+                    currOperand->value = 0;
+                    currOperand->type = symbol;
+                    currOperand->addressingMethod = (AddressingMethod) {0, 1, 0, 0};
+                    printf("symbol name is:%s, ", operandSymbolName);
+                }
+                else
+                {
+                    // Error undefined symbol
+                }
+            }
+        }
+        else
+        {
+            // Error, undefined operand name
+        }
+    }
+
+    return currOperand;
+}

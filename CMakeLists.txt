@@ -3,4 +3,4 @@ project(maman14 C)
 
 set(CMAKE_C_STANDARD 90)
 
-add_executable(maman14 main.c preprocessor.c preprocessor.h globals.h)
+add_executable(maman14 main.c preprocessor.c preprocessor.h globals.h utils.c firstRun.h firstRun.c dataStructs.c dataStructs.h)
