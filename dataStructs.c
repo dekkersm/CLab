@@ -11,7 +11,7 @@ SymbolNode createSymbolNode(){
     return temp;//return the new node
 }
 
-SymbolNode addSymbolNode(SymbolNode head, char *name, int value, enum SymbolType type, int isRelocatable)
+SymbolNode addSymbolNode(SymbolNode head, char *name, int value, SymbolType type, int isRelocatable)
 {
     SymbolNode temp,p;
     temp = createSymbolNode();
@@ -34,4 +34,19 @@ SymbolNode addSymbolNode(SymbolNode head, char *name, int value, enum SymbolType
         p->next = temp;//Point the previous last node to the new node created.
     }
     return head;
+}
+
+SymbolNode getSymbolByName(SymbolNode head, char *name)
+{
+    SymbolNode p;
+    p = head;
+    while(p != NULL){
+        if(!strcmp(p->name, name))
+        {
+            return p;
+        }
+        p = p->next;
+    }
+
+    return NULL;
 }

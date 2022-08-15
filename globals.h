@@ -12,6 +12,12 @@
 #define SYMBOL_MAX_CHAR_LENGTH 30
 #define FIRST_ADDRESS_IN_OBJ_FILE 100
 
+// Offsets for memory words
+#define OPCODE_WORD_OFFSET 6
+#define SRC_OPERAND_WORD_OFFSET 4
+#define DEST_OPERAND_WORD_OFFSET 2
+#define ARE_WORD_OFFSET 0
 
+/* !,@,#,$,%,^,&,*,<,>,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v */
 
 #endif //MAMAN14_GLOBALS_H
