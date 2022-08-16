@@ -56,5 +56,8 @@ int main(int argc, char *argv[]) {
         printf("array %d: %d\n", j+1, instructionsArray[j]);
     }
 
+    char res[100];
+    printf("%s\n", decTo32(res, 123));
+
     fclose(sourceFile);
 }

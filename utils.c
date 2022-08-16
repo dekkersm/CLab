@@ -49,27 +49,75 @@ int stringToInt(char *number)
     return intNumber * sign;
 }
 
-int convertBase(int number,int base){
-    if(number == 0 || base==10)
-        return number;
-    return (number % base) + 10*convertBase(number / base, base);
+char charValue(int num)
+{
+    switch(num){
+        case 0: return '!';
+        case 1: return '@';
+        case 2: return '#';
+        case 3: return '$';
+        case 4: return '%';
+        case 5: return '^';
+        case 6: return '&';
+        case 7: return '*';
+        case 8: return '<';
+        case 9: return '>';
+        case 10: return 'a';
+        case 11: return 'b';
+        case 12: return 'c';
+        case 13: return 'd';
+        case 14: return 'e';
+        case 15: return 'f';
+        case 16: return 'g';
+        case 17: return 'h';
+        case 18: return 'i';
+        case 19: return 'j';
+        case 20: return 'k';
+        case 21: return 'l';
+        case 22: return 'm';
+        case 23: return 'n';
+        case 24: return 'o';
+        case 25: return 'p';
+        case 26: return 'q';
+        case 27: return 'r';
+        case 28: return 's';
+        case 29: return 't';
+        case 30: return 'u';
+        case 31: return 'v';
+        default: break;
+    }
 }
 
-void toBase32(int number, char *numIn32)
+// Utility function to reverse a string
+void reverseStr(char *str)
 {
-//    char numString[100];
-//    sprintf(numString, "%d", number);
-//    int i =0;
-//    while(numString[i]!='\0')
-//    {
-//        char currChar = '\0';
-//
-//        switch (numString[i]) {
-//            case '!': strncat(numIn32, &currChar, 1); break;
-//            default: break;
-//        }
-//
-//        i++;
-//    }
-//    printf("%s\n", numIn32);
+    int len = strlen(str);
+    int i;
+    for (i = 0; i < len/2; i++)
+    {
+        char temp = str[i];
+        str[i] = str[len-i-1];
+        str[len-i-1] = temp;
+    }
+}
+
+// Function to convert a given decimal number
+char* decTo32(char res[], short inputNum)
+{
+    int index = 0;  // Initialize index of result
+    short base = 32;
+
+    // Convert input number is given base by repeatedly
+    // dividing it by base and taking remainder
+    while (inputNum > 0)
+    {
+        res[index++] = charValue(inputNum % base);
+        inputNum /= base;
+    }
+    res[index] = '\0';
+
+    // Reverse the result
+    reverseStr(res);
+
+    return res;
 }
