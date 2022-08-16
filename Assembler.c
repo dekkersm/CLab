@@ -36,6 +36,62 @@ void writeToObjFile(int IC, int DC, short memoryArray[], char *fileName)
     fclose(objFile);
 }
 
+void writeToExtFile(ExternNode externList, char *fileName)
+{
+    // TODO: don't create if no extern
+    FILE *extFile;
+    extFile = fopen(fileName,"w");
+    if(fileName == NULL)
+    {
+        printf("ERROR: can't open the file: \n \n");
+    }
+
+    char line[MAX_CHARS_IN_LINE];
+    char value[MAX_CHARS_IN_LINE];
+
+    ExternNode p;
+    p = externList;
+    while(p != NULL){
+        memset(line, '\0', MAX_CHARS_IN_LINE);
+        memset(value, '\0', MAX_CHARS_IN_LINE);
+
+        sprintf(line, "%s %s", p->name, decTo32(value, p->value));
+        fprintf(extFile, "%s\n", line);
+        p = p->next;
+    }
+
+    fclose(extFile);
+}
+
+void writeToEntFile(SymbolNode symbolTable, char *fileName)
+{
+    // TODO: don't create if no entry
+    FILE *entFile;
+    entFile = fopen(fileName,"w");
+    if(fileName == NULL)
+    {
+        printf("ERROR: can't open the file: \n \n");
+    }
+
+    char line[MAX_CHARS_IN_LINE];
+    char value[MAX_CHARS_IN_LINE];
+
+    SymbolNode p;
+    p = symbolTable;
+    while(p != NULL){
+        memset(line, '\0', MAX_CHARS_IN_LINE);
+        memset(value, '\0', MAX_CHARS_IN_LINE);
+
+        if(p->type == entry) {
+            sprintf(line, "%s %s", p->name, decTo32(value, p->value));
+            fprintf(entFile, "%s\n", line);
+        }
+        p = p->next;
+    }
+
+    fclose(entFile);
+}
+
 void compileFile(char *arg)
 {
 
@@ -107,7 +163,11 @@ int main(int argc, char *argv[]) {
     printf("%s\n", decTo32(res, 123));
 
     char *objFileName = "C:\\May\\OpenU\\CLab\\maman14\\Docs\\source.txt.obj";
+    char *extFileName = "C:\\May\\OpenU\\CLab\\maman14\\Docs\\source.txt.ext";
+    char *entFileName = "C:\\May\\OpenU\\CLab\\maman14\\Docs\\source.txt.ent";
     writeToObjFile(IC, DC, instructionsArray, objFileName);
+    writeToExtFile(externList, extFileName);
+    writeToEntFile(table, entFileName);
 
     fclose(sourceFile);
 
