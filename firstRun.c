@@ -4,38 +4,34 @@
 #include "string.h"
 #include "firstRun.h"
 
-int IC = 0;
-int DC = 0;
-int lineCounter = 0;
-int isFirstRun = 1;
-short instructionsArray[MEMORY_ARRAY_WORD_SIZE];
-short dataArray[MEMORY_ARRAY_WORD_SIZE];
+short IC = 0;
+short DC = 0;
+int firstRunLC = 0;
+const int isFirstRun = 1;
 
-void appendToDataArray(short data)
+void appendToDataArray(short data, short dataArray[])
 {
-    dataArray[DC] = data;
+    dataArray[DC] = BIT_MASK_FOR_WORD_SIZE & data;
     DC++;
 }
 
-void firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable)
+void firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable,short memoryArray[], short dataArray[])
 {
     int isCodeValid = 1; // Where any errors found
 
     // Initializing the memory arrays and counters
     IC = 0;
     DC = 0;
-    lineCounter = 0;
-    memset(instructionsArray, 0, MEMORY_ARRAY_WORD_SIZE);
-    memset(dataArray, 0, MEMORY_ARRAY_WORD_SIZE);
+    firstRunLC = 0;
 
     char currLine[MAX_CHARS_IN_LINE];
     memset(currLine , '\0' , MAX_CHARS_IN_LINE);
 
     while(fgets(currLine, MAX_CHARS_IN_LINE, amFile))
     {
-        lineCounter++;
-        printf("\nline :%d, ", lineCounter);
-        parseLineFirstRun(currLine, symbolTable);
+        firstRunLC++;
+        printf("\nline :%d, ", firstRunLC);
+        parseLineFirstRun(currLine, symbolTable, memoryArray, dataArray);
     }
 
     if(isCodeValid)
@@ -58,22 +54,16 @@ void firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable)
         int currDC = 0;
         while(currDC <= DC)
         {
-            instructionsArray[IC+currDC] = dataArray[currDC];
+            memoryArray[IC+currDC] = dataArray[currDC];
             currDC++;
         }
-
-//        int i;
-//        for (i = 0; i < MEMORY_ARRAY_WORD_SIZE; ++i) {
-//            printf("array %d: %d\n", i, instructionsArray[i]);
-//        }
-
       // and start run 2
     }
 
     // errors where found - halt operation
 }
 
-void parseLineFirstRun(char *currLine, SymbolNode symbolTable)
+void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray[], short dataArray[])
 {
     if(!isEmptyOrCommentLine(currLine))
     {
@@ -113,9 +103,9 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable)
                     }
 
                     switch (guidingType) {
-                        case dataType: parseDataTypeLine(currLine); break;
-                        case stringType: parseStringTypeLine(currLine); break;
-                        case structType: parseStructTypeLine(currLine); break;
+                        case dataType: parseDataTypeLine(currLine, dataArray); break;
+                        case stringType: parseStringTypeLine(currLine, dataArray); break;
+                        case structType: parseStructTypeLine(currLine, dataArray); break;
                         default: break;
                     }
                 }
@@ -142,7 +132,7 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable)
                 printf("instruction, ");
 
                 // parse the instruction and compute L
-                int L = parseInstructionLine(currLine, currCmd, symbolTable);
+                int L = parseInstructionLine(currLine, currCmd, symbolTable, memoryArray);
                 IC = IC + L;
             }
             else
@@ -157,7 +147,7 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable)
     }
 }
 
-void parseDataTypeLine(char *currLine)
+void parseDataTypeLine(char *currLine, short dataArray[])
 {
     int lineIndex = 0;
     char currNum[MAX_CHARS_IN_DATA_NUM];
@@ -178,7 +168,7 @@ void parseDataTypeLine(char *currLine)
         if(currLine[lineIndex] == ',' && !wasComma) {
             int operandNum = stringToInt(currNum);
             printf("num is: %d ", operandNum);
-            appendToDataArray((short) operandNum);
+            appendToDataArray((short) operandNum, dataArray);
             wasComma = 1;
             memset(currNum, '\0', MAX_CHARS_IN_DATA_NUM);
         }
@@ -191,7 +181,7 @@ void parseDataTypeLine(char *currLine)
         {
             int operandNum = stringToInt(currNum);
             printf("num is: %d ", operandNum);
-            appendToDataArray((short) operandNum);
+            appendToDataArray((short) operandNum, dataArray);
             stopSign = 1;
         }
         else if(!isspace(currLine[lineIndex]))
@@ -203,7 +193,7 @@ void parseDataTypeLine(char *currLine)
     }
 }
 
-void parseStringTypeLine(char *currLine)
+void parseStringTypeLine(char *currLine, short dataArray[])
 {
     int lineIndex = 0;
     char string[MAX_CHARS_IN_LINE];
@@ -227,13 +217,13 @@ void parseStringTypeLine(char *currLine)
         else if(isInString && currLine[lineIndex] == '"')
         {
             printf("/0 ");
-            appendToDataArray('\0');
+            appendToDataArray('\0', dataArray);
             isInString = ~isInString;
         }
         else if(isInString)
         {
             printf("%c ", currLine[lineIndex]);
-            appendToDataArray(currLine[lineIndex]);
+            appendToDataArray(currLine[lineIndex], dataArray);
         }
         else if(!isspace(currLine[lineIndex]))
         {
@@ -244,7 +234,7 @@ void parseStringTypeLine(char *currLine)
     }
 }
 
-void parseStructTypeLine(char *currLine)
+void parseStructTypeLine(char *currLine, short dataArray[])
 {
     int lineIndex = 0;
     char currNum[MAX_CHARS_IN_DATA_NUM];
@@ -275,7 +265,7 @@ void parseStructTypeLine(char *currLine)
     // append the read num to the array
     int operandNum = stringToInt(currNum);
     printf("struct num is: %d ", operandNum);
-    appendToDataArray((short) operandNum);
+    appendToDataArray((short) operandNum, dataArray);
 
     // Start the string handling
     lineIndex++; // For the un-read comma
@@ -290,13 +280,13 @@ void parseStructTypeLine(char *currLine)
         else if(isInString && currLine[lineIndex] == '"')
         {
             printf("/0 ");
-            appendToDataArray('\0');
+            appendToDataArray('\0', dataArray);
             isInString = ~isInString;
         }
         else if(isInString)
         {
             printf("char:%c, ", currLine[lineIndex]);
-            appendToDataArray(currLine[lineIndex]);
+            appendToDataArray(currLine[lineIndex], dataArray);
         }
         else if(!isspace(currLine[lineIndex]))
         {
@@ -318,7 +308,7 @@ void parseExternLine(char *currLine, SymbolNode symbolTable)
     // TODO: error raise on extern dont have operand
 }
 
-int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTable)
+int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTable, short memoryArray[])
 {
     int L = 1;
     short currInstructionWord = 0;
@@ -342,7 +332,7 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
     int wasRegister = 0;
 
     if(firstOperandString != NULL) {
-        firstOperand = parseOperand(firstOperandString, symbolTable);
+        firstOperand = parseOperand(firstOperandString, symbolTable, isFirstRun);
         if(checkAddressingMethodValidity(firstOperand->addressingMethod,
                                          (currCmd->operandCount == 2 ?
                                          currCmd->sourceOpLegalAddressMethods :
@@ -378,8 +368,8 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
     }
 
     if(destOperandString != NULL) {
-        destOperand = parseOperand(destOperandString, symbolTable);
-        if(checkAddressingMethodValidity(destOperand->addressingMethod, currCmd->sourceOpLegalAddressMethods))
+        destOperand = parseOperand(destOperandString, symbolTable, isFirstRun);
+        if(checkAddressingMethodValidity(destOperand->addressingMethod, currCmd->destOpLegalAddressMethods))
         {
             short addressingMethod;
             switch (destOperand->type) {
@@ -404,150 +394,7 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
 
     // Appending the first instruction word to the instruction array
     printf("word in memory %d", currInstructionWord);
-    instructionsArray[IC] = currInstructionWord;
+    memoryArray[IC] = currInstructionWord;
 
     return L;
-}
-
-int checkAddressingMethodValidity(AddressingMethod operandAM, AddressingMethod legalAM)
-{
-    return ((operandAM.direct && legalAM.direct) ||
-            (operandAM.immediate && legalAM.immediate) ||
-            (operandAM.directRegister && legalAM.directRegister) ||
-            (operandAM.structIndex && legalAM.structIndex));
-}
-
-Operand* parseOperand(char *operand, SymbolNode symbolTable)
-{
-    int wordIndex = 0;
-    int operandValue;
-
-    Operand* currOperand = (Operand*)malloc(sizeof(Operand));
-
-    // Checking if the operand is a number
-    if(operand[wordIndex] == '#')
-    {
-        wordIndex++;
-        char operandNumValue[MAX_CHARS_IN_DATA_NUM];
-        memset(operandNumValue, '\0', MAX_CHARS_IN_DATA_NUM);
-        if(operand[wordIndex] == '-' || operand[wordIndex] == '+' || isdigit(operand[wordIndex]))
-        {
-            strncat(operandNumValue, &operand[wordIndex], 1);
-            wordIndex++;
-            while (operand[wordIndex] != '\0' && isdigit(operand[wordIndex]))
-            {
-                strncat(operandNumValue, &operand[wordIndex], 1);
-                wordIndex++;
-            }
-
-            if(operand[wordIndex] != '\0')
-            {
-                //error not a num
-            }
-            else {
-                operandValue = stringToInt(operandNumValue);
-                printf("operand number is: %d, ", operandValue);
-                currOperand->value = operandValue;
-                currOperand->type = num;
-                currOperand->addressingMethod = (AddressingMethod){1,0,0,0};
-            }
-        }
-        else
-        {
-            // error raise - invalid number operand
-        }
-    }
-    // Checking if the operand is a register
-    else if(operand[wordIndex] == 'r' && isdigit(operand[wordIndex+1])) {
-        // register - check which register
-        wordIndex++;
-        int regNum = operand[wordIndex] - '0';
-        if (0 <= regNum && regNum <= 7) {
-            operandValue = regNum;
-            printf("reg name is:%d, ", operandValue);
-            currOperand->value = operandValue;
-            currOperand->type = reg;
-            currOperand->addressingMethod = (AddressingMethod) {0, 0, 0, 1};
-        } else {
-            // error invalid register number
-        }
-    }
-    // check if the operand is a symbol
-    else {
-        char operandSymbolName[SYMBOL_MAX_CHAR_LENGTH];
-        memset(operandSymbolName, '\0', SYMBOL_MAX_CHAR_LENGTH);
-        SymbolNode currSymbol = createSymbolNode();
-
-        while (operand[wordIndex] != '\0' && isalnum(operand[wordIndex]))
-        {
-            strncat(operandSymbolName, &operand[wordIndex], 1);
-            wordIndex++;
-        }
-
-        if(operand[wordIndex] == '.' && isdigit(operand[wordIndex+1]))
-        {
-            wordIndex++;
-            int structField = operand[wordIndex] - '0';
-            if(structField == 1 || structField == 2)
-            {
-                currSymbol = getSymbolByName(symbolTable, operandSymbolName);
-                if(currSymbol) {
-                    currOperand->value = currSymbol->value;
-                    currOperand->fieldValue = structField;
-                    currOperand->type = struc;
-                    currOperand->addressingMethod = (AddressingMethod) {0, 0, 1, 0};
-                    printf("struct name is:%s, ", operandSymbolName);
-                }
-                else
-                {
-                    if(isFirstRun)
-                    {
-                        currOperand->value = 0;
-                        currOperand->fieldValue = structField;
-                        currOperand->type = struc;
-                        currOperand->addressingMethod = (AddressingMethod) {0, 0, 1, 0};
-                        printf("struct name is:%s, ", operandSymbolName);
-                    }
-                    else
-                    {
-                        // Error undefined struct
-                    }
-                }
-            }
-            else
-            {
-                // error wrong struct field
-            }
-        }
-        else if(operand[wordIndex] == '\0')
-        {
-            currSymbol = getSymbolByName(symbolTable, operandSymbolName);
-            if(currSymbol) {
-                currOperand->value = currSymbol->value;
-                currOperand->type = symbol;
-                currOperand->addressingMethod = (AddressingMethod) {0, 1, 0, 0};
-                printf("symbol name is:%s, ", operandSymbolName);
-            }
-            else
-            {
-                if(isFirstRun)
-                {
-                    currOperand->value = 0;
-                    currOperand->type = symbol;
-                    currOperand->addressingMethod = (AddressingMethod) {0, 1, 0, 0};
-                    printf("symbol name is:%s, ", operandSymbolName);
-                }
-                else
-                {
-                    // Error undefined symbol
-                }
-            }
-        }
-        else
-        {
-            // Error, undefined operand name
-        }
-    }
-
-    return currOperand;
 }

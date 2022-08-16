@@ -7,7 +7,6 @@
 
 #include "utils.h"
 #include "globals.h"
-#include "string.h"
 
 typedef enum {
     num = 0,
@@ -55,22 +54,35 @@ typedef struct {
 typedef struct {
     operandType type;
     AddressingMethod addressingMethod;
-    int value;
-    int fieldValue;
+    ARE are;
+    short value;
+    short fieldValue; // optional
+    char symbolName[SYMBOL_MAX_CHAR_LENGTH]; // optional
 } Operand;
 
 struct SymbolTable
 {
     char name[SYMBOL_MAX_CHAR_LENGTH];
-    int value;
+    short value;
     SymbolType type; // external/entry/Data/Code
     int isRelocatable;
     struct SymbolTable* next;
 };
 
+struct ExternTable
+{
+    char name[SYMBOL_MAX_CHAR_LENGTH];
+    short value;
+    struct ExternTable* next;
+};
+
 typedef struct SymbolTable *SymbolNode; //Define node as pointer of data type struct LinkedList
+typedef struct ExternTable *ExternNode;
 SymbolNode createSymbolNode();
-SymbolNode addSymbolNode(SymbolNode head, char *name, int value, SymbolType type, int isRelocatable);
+SymbolNode addSymbolNode(SymbolNode head, char *name, short value, SymbolType type, int isRelocatable);
 SymbolNode getSymbolByName(SymbolNode head, char *name);
+
+ExternNode createExternNode();
+ExternNode addExternNode(ExternNode head, char *name, short value);
 
 #endif //MAMAN14_DATASTRUCTS_H

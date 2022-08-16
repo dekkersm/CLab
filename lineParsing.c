@@ -200,3 +200,152 @@ int parseCommand(char *cmd, Command *currCmd)
     }
     return success;
 }
+
+Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun)
+{
+    int wordIndex = 0;
+    short operandValue;
+
+    Operand* currOperand = (Operand*)malloc(sizeof(Operand));
+
+    // Checking if the operand is a number
+    if(operand[wordIndex] == '#')
+    {
+        wordIndex++;
+        char operandNumValue[MAX_CHARS_IN_DATA_NUM];
+        memset(operandNumValue, '\0', MAX_CHARS_IN_DATA_NUM);
+        if(operand[wordIndex] == '-' || operand[wordIndex] == '+' || isdigit(operand[wordIndex]))
+        {
+            strncat(operandNumValue, &operand[wordIndex], 1);
+            wordIndex++;
+            while (operand[wordIndex] != '\0' && isdigit(operand[wordIndex]))
+            {
+                strncat(operandNumValue, &operand[wordIndex], 1);
+                wordIndex++;
+            }
+
+            if(operand[wordIndex] != '\0')
+            {
+                //error not a num
+            }
+            else {
+                operandValue = stringToInt(operandNumValue);
+                printf("operand number is: %d, ", operandValue);
+                currOperand->value = operandValue;
+                currOperand->type = num;
+                currOperand->are = absolute;
+                currOperand->addressingMethod = (AddressingMethod){1,0,0,0};
+            }
+        }
+        else
+        {
+            // error raise - invalid number operand
+        }
+    }
+        // Checking if the operand is a register
+    else if(operand[wordIndex] == 'r' && isdigit(operand[wordIndex+1])) {
+        // register - check which register
+        wordIndex++;
+        short regNum = operand[wordIndex] - '0';
+        if (0 <= regNum && regNum <= 7) {
+            operandValue = regNum;
+            printf("reg name is:%d, ", operandValue);
+            currOperand->value = operandValue;
+            currOperand->type = reg;
+            currOperand->are = absolute;
+            currOperand->addressingMethod = (AddressingMethod) {0, 0, 0, 1};
+        } else {
+            // error invalid register number
+        }
+    }
+        // check if the operand is a symbol
+    else {
+        char operandSymbolName[SYMBOL_MAX_CHAR_LENGTH];
+        memset(operandSymbolName, '\0', SYMBOL_MAX_CHAR_LENGTH);
+        SymbolNode currSymbol = createSymbolNode();
+
+        while (operand[wordIndex] != '\0' && isalnum(operand[wordIndex]))
+        {
+            strncat(operandSymbolName, &operand[wordIndex], 1);
+            wordIndex++;
+        }
+
+        if(operand[wordIndex] == '.' && isdigit(operand[wordIndex+1]))
+        {
+            wordIndex++;
+            short structField = operand[wordIndex] - '0';
+            if(structField == 1 || structField == 2)
+            {
+                currSymbol = getSymbolByName(symbolTable, operandSymbolName);
+                if(currSymbol) {
+                    currOperand->value = currSymbol->value;
+                    currOperand->fieldValue = structField;
+                    currOperand->type = struc;
+                    currOperand->addressingMethod = (AddressingMethod) {0, 0, 1, 0};
+                    currOperand->are = currSymbol->type == external ? ext : relocatable;
+                    strcpy(currOperand->symbolName, operandSymbolName);
+                    printf("struct name is:%s, ", operandSymbolName);
+                }
+                else
+                {
+                    if(isFirstRun)
+                    {
+                        currOperand->value = 0;
+                        currOperand->fieldValue = structField;
+                        currOperand->type = struc;
+                        currOperand->addressingMethod = (AddressingMethod) {0, 0, 1, 0};
+                        printf("struct name is:%s, ", operandSymbolName);
+                    }
+                    else
+                    {
+                        // Error undefined struct
+                    }
+                }
+            }
+            else
+            {
+                // error wrong struct field
+            }
+        }
+        else if(operand[wordIndex] == '\0')
+        {
+            currSymbol = getSymbolByName(symbolTable, operandSymbolName);
+            if(currSymbol) {
+                currOperand->value = currSymbol->value;
+                currOperand->type = symbol;
+                currOperand->addressingMethod = (AddressingMethod) {0, 1, 0, 0};
+                currOperand->are = currSymbol->type == external ? ext : relocatable;
+                strcpy(currOperand->symbolName, operandSymbolName);
+                printf("symbol name is:%s, ", operandSymbolName);
+            }
+            else
+            {
+                if(isFirstRun)
+                {
+                    currOperand->value = 0;
+                    currOperand->type = symbol;
+                    currOperand->addressingMethod = (AddressingMethod) {0, 1, 0, 0};
+                    printf("symbol name is:%s, ", operandSymbolName);
+                }
+                else
+                {
+                    // Error undefined symbol
+                }
+            }
+        }
+        else
+        {
+            // Error, undefined operand name
+        }
+    }
+
+    return currOperand;
+}
+
+int checkAddressingMethodValidity(AddressingMethod operandAM, AddressingMethod legalAM)
+{
+    return ((operandAM.direct && legalAM.direct) ||
+            (operandAM.immediate && legalAM.immediate) ||
+            (operandAM.directRegister && legalAM.directRegister) ||
+            (operandAM.structIndex && legalAM.structIndex));
+}

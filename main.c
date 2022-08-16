@@ -19,8 +19,15 @@ int main(int argc, char *argv[]) {
 
     short instructionsArray[MEMORY_ARRAY_WORD_SIZE];
     short dataArray[MEMORY_ARRAY_WORD_SIZE];
+    memset(instructionsArray, 0, sizeof(instructionsArray));
+    memset(dataArray, 0, sizeof(dataArray));
 
-    firstRunOnAssemblyFile(sourceFile, table);
+    firstRunOnAssemblyFile(sourceFile, table, instructionsArray, dataArray);
+
+    int j;
+    for (j = 0; j < MEMORY_ARRAY_WORD_SIZE; ++j) {
+        printf("array %d: %d\n", j, instructionsArray[j]);
+    }
 
     fclose(sourceFile);
 
@@ -32,7 +39,22 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    secondRunOnAssemblyFile(sourceFile, table, instructionsArray, dataArray);
+    ExternNode externList = NULL;
+    externList = addExternNode(externList, "k", 0);
+
+    secondRunOnAssemblyFile(sourceFile, table, instructionsArray, externList);
+
+
+    ExternNode p;
+    p = externList;
+    while(p != NULL){
+        printf("name:%s, val:%d \n", p->name, p->value);
+        p = p->next;
+    }
+
+    for (j = 0; j < MEMORY_ARRAY_WORD_SIZE; ++j) {
+        printf("array %d: %d\n", j+1, instructionsArray[j]);
+    }
 
     fclose(sourceFile);
 }
