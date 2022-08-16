@@ -11,7 +11,10 @@
 #define MAX_CHARS_IN_DATA_NUM 6 // max num represented by 10 bits is 4 digits long + sign + \0
 #define SYMBOL_MAX_CHAR_LENGTH 30
 
+// Memory globals
 #define FIRST_ADDRESS_IN_OBJ_FILE 100
+#define MEMORY_WORD_BIT_SIZE 10
+#define MEMORY_ARRAY_WORD_SIZE 256
 
 // Offsets for memory words
 #define OPCODE_WORD_OFFSET 6

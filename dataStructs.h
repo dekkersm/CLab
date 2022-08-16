@@ -29,12 +29,28 @@ typedef enum {
     ext = 1,
 } ARE;
 
+enum GuidingType {
+    dataType = 0,
+    stringType = 1,
+    structType = 2,
+    externalType = 3,
+    entryType = 4
+};
+
 typedef struct {
     int immediate : 1;
     int direct : 1;
     int structIndex : 1;
     int directRegister : 1;
 } AddressingMethod;
+
+
+typedef struct {
+    short opcode;
+    int operandCount;
+    AddressingMethod sourceOpLegalAddressMethods;
+    AddressingMethod destOpLegalAddressMethods;
+} Command;
 
 typedef struct {
     operandType type;
