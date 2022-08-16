@@ -101,7 +101,7 @@ void reverseStr(char *str)
     }
 }
 
-// Function to convert a given decimal number
+// Function to convert a given decimal number to base 32 of 10 bit width
 char* decTo32(char res[], short inputNum)
 {
     int index = 0;  // Initialize index of result
@@ -113,6 +113,14 @@ char* decTo32(char res[], short inputNum)
     {
         res[index++] = charValue(inputNum % base);
         inputNum /= base;
+    }
+    if(index == 0)
+    {
+        res[index++] = '!';
+    }
+    if(index == 1)
+    {
+        res[index++] = '!';
     }
     res[index] = '\0';
 

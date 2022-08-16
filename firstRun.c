@@ -15,7 +15,7 @@ void appendToDataArray(short data, short dataArray[])
     DC++;
 }
 
-void firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable,short memoryArray[], short dataArray[])
+int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable,short memoryArray[], short dataArray[])
 {
     int isCodeValid = 1; // Where any errors found
 
@@ -58,9 +58,11 @@ void firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable,short memoryArr
             currDC++;
         }
       // and start run 2
+        return DC;
     }
 
     // errors where found - halt operation
+    return -1;
 }
 
 void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray[], short dataArray[])

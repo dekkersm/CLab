@@ -7,7 +7,7 @@
 
 #include "lineParsing.h"
 
-void firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArray[], short dataArray[]);
+int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArray[], short dataArray[]);
 void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray[], short dataArray[]);
 
 // Guiding line parsing

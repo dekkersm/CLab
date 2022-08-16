@@ -9,7 +9,7 @@ int secondRunLC = 0;
 int externCount = 0;
 const isSecondRun = 1;
 
-void secondRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short instructionsArray[], ExternNode externList)
+int secondRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short instructionsArray[], ExternNode externList)
 {
     int isCodeValid = 1; // Where any errors found
 
@@ -30,9 +30,11 @@ void secondRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short instruc
 
     if(isCodeValid)
     {
+        return secondRunIC;
     }
 
     // errors where found - halt operation
+    return -1;
 }
 
 void parseLineSecondRun(char *currLine, SymbolNode symbolTable, short memoryArray[], ExternNode externList)
