@@ -1,6 +1,3 @@
-//
-// Created by dekke on 09/07/2022.
-//
 #include "preprocessor.h"
 
 MacroNode createMacroNode(){
@@ -19,15 +16,15 @@ MacroNode addMacroNode(MacroNode head, char *name, char *content)
 
     if(head == NULL)
     {
-        head = temp;     //when linked list is empty
+        head = temp;
     }
     else
     {
         p  = head;
         while(p->next != NULL){
-            p = p->next;//traverse the list until p is the last node.The last node always points to NULL.
+            p = p->next;
         }
-        p->next = temp;//Point the previous last node to the new node created.
+        p->next = temp;
     }
     return head;
 }
@@ -46,7 +43,7 @@ MacroNode getMacroByName(MacroNode head, char *name) {
     return NULL;
 }
 
-// Returns 1 if any macro statement is found, and changes the given macro flag
+/*// Returns 1 if any macro statement is found, and changes the given macro flag*/
 int CheckForMacroStatement(char line[], int *isMacroDefinition)
 {
     char firstWord[MAX_CHARS_IN_LINE];
@@ -70,7 +67,7 @@ void ParseMacros(FILE *asFile, FILE *amFile)
     char line [MAX_CHARS_IN_LINE];
     memset(line , '\0' , MAX_CHARS_IN_LINE);
 
-    // The head of the macro list
+    /*// The head of the macro list*/
     MacroNode macroList = NULL;
 
     int isMacroDefinition = 0;
@@ -84,38 +81,38 @@ void ParseMacros(FILE *asFile, FILE *amFile)
     {
         if(CheckForMacroStatement(line, &isMacroDefinition))
         {
-            // If a macro statement was found
+            /*// If a macro statement was found*/
             if(isMacroDefinition)
             {
                 AddMacroNameToTable(line, currMacroName);
             }
             else
             {
-                // End of macro, Add to the macro list
+                /*// End of macro, Add to the macro list*/
                 macroList = addMacroNode(macroList, currMacroName, currMacroContent);
 
-                // Resetting the curr macro
+                /*// Resetting the curr macro*/
                 memset(currMacroName, '\0', MAX_CHARS_IN_LINE);
                 memset(currMacroContent, '\0', MAX_CHARS_IN_LINE);
             }
         }
         else
         {
-            // If the line is a regular non-macro statement
+            /*// If the line is a regular non-macro statement*/
             if (isMacroDefinition) {
                 AddLineToMacroContent(line, currMacroContent);
             }
             else {
                 if (!checkIfLineIsADefinedMacro(line, macroList, amFile))
                 {
-                    // Adding the line as is to the .am file if it is not a macro name
+                    /*// Adding the line as is to the .am file if it is not a macro name*/
                     fprintf(amFile, "%s", line);
                 }
             }
         }
     }
 
-    fprintf(amFile, "%c", '\n'); // new line in end of file
+    fprintf(amFile, "%c", '\n'); /*// new line in end of file*/
 }
 
 void AddMacroNameToTable(char line[], char *currMacroName)

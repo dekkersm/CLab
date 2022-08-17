@@ -1,7 +1,3 @@
-//
-// Created by dekke on 14/08/2022.
-//
-
 #ifndef MAMAN14_DATASTRUCTS_H
 #define MAMAN14_DATASTRUCTS_H
 
@@ -56,15 +52,15 @@ typedef struct {
     AddressingMethod addressingMethod;
     ARE are;
     short value;
-    short fieldValue; // optional
-    char symbolName[SYMBOL_MAX_CHAR_LENGTH]; // optional
+    short fieldValue; /* optional*/
+    char symbolName[SYMBOL_MAX_CHAR_LENGTH]; /*optional*/
 } Operand;
 
 struct SymbolTable
 {
     char name[SYMBOL_MAX_CHAR_LENGTH];
     short value;
-    SymbolType type; // external/entry/Data/Code
+    SymbolType type; /*external/entry/Data/Code*/
     int isRelocatable;
     struct SymbolTable* next;
 };
@@ -76,7 +72,7 @@ struct ExternTable
     struct ExternTable* next;
 };
 
-typedef struct SymbolTable *SymbolNode; //Define node as pointer of data type struct LinkedList
+typedef struct SymbolTable *SymbolNode; /*Define node as pointer of data type struct LinkedList*/
 typedef struct ExternTable *ExternNode;
 SymbolNode createSymbolNode();
 SymbolNode addSymbolNode(SymbolNode head, char *name, short value, SymbolType type, int isRelocatable);
@@ -85,4 +81,4 @@ SymbolNode getSymbolByName(SymbolNode head, char *name);
 ExternNode createExternNode();
 ExternNode addExternNode(ExternNode head, char *name, short value);
 
-#endif //MAMAN14_DATASTRUCTS_H
+#endif

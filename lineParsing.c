@@ -1,7 +1,3 @@
-//
-// Created by dekke on 16/08/2022.
-//
-
 #include "lineParsing.h"
 
 int isEmptyOrCommentLine(char *currLine)
@@ -78,7 +74,7 @@ int classifyGuidingType(char *currLine, enum GuidingType *guidingType)
     {
         *guidingType = entryType;
     }
-    else // if not any of the data types return false
+    else /*// if not any of the data types return false*/
     {
         return 0;
     }
@@ -89,7 +85,7 @@ int classifyGuidingType(char *currLine, enum GuidingType *guidingType)
 char* getExternOrEntryOperand(char *currLine)
 {
     char *operand;
-    operand = strtok(currLine, " \t\n"); // Dummy Read for the first word in line
+    operand = strtok(currLine, " \t\n"); /*// Dummy Read for the first word in line*/
     operand = strtok(NULL, " \t\n");
 
     return operand;
@@ -208,7 +204,7 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
 
     Operand* currOperand = (Operand*)malloc(sizeof(Operand));
 
-    // Checking if the operand is a number
+    /*// Checking if the operand is a number*/
     if(operand[wordIndex] == '#')
     {
         wordIndex++;
@@ -243,9 +239,9 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
             return NULL;
         }
     }
-        // Checking if the operand is a register
+        /*// Checking if the operand is a register*/
     else if(operand[wordIndex] == 'r' && isdigit(operand[wordIndex+1])) {
-        // register - check which register
+        /*// register - check which register*/
         wordIndex++;
         short regNum = operand[wordIndex] - '0';
         if (0 <= regNum && regNum <= 7) {
@@ -260,7 +256,7 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
             return NULL;
         }
     }
-        // check if the operand is a symbol
+       /* // check if the operand is a symbol*/
     else {
         char operandSymbolName[SYMBOL_MAX_CHAR_LENGTH];
         memset(operandSymbolName, '\0', SYMBOL_MAX_CHAR_LENGTH);

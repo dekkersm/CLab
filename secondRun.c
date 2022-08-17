@@ -1,7 +1,3 @@
-//
-// Created by dekke on 16/08/2022.
-//
-
 #include "secondRun.h"
 
 short secondRunIC = 0;
@@ -11,7 +7,7 @@ const isSecondRun = 1;
 
 int secondRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short instructionsArray[], ExternNode externList)
 {
-    // Initializing the counters
+    /*// Initializing the counters*/
     secondRunIC = 0;
     secondRunLC = 0;
 
@@ -29,7 +25,7 @@ int secondRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short instruct
         return secondRunIC;
     }
 
-    // errors where found - halt operation
+    /*// errors where found - halt operation*/
     return -1;
 }
 
@@ -43,14 +39,14 @@ void parseLineSecondRun(char *currLine, SymbolNode symbolTable, short memoryArra
         readFirstWordInLine(currLine, firstWordInCurrLine);
 
         if (isSymbolDeclaration(firstWordInCurrLine)) {
-            // Slice the symbol declaration from the line for further parsing as normal line
+            /*// Slice the symbol declaration from the line for further parsing as normal line*/
             currLine = strchr(currLine, ':')+1;
         }
 
-        // Checking if the line is a guiding line or instruction
+        /*// Checking if the line is a guiding line or instruction*/
         if(isGuidingLine(currLine))
         {
-            // Classify the type of guiding line, if not found raise error
+            /*// Classify the type of guiding line, if not found raise error*/
             enum GuidingType guidingType;
             if (classifyGuidingType(currLine, &guidingType))
             {
@@ -75,7 +71,7 @@ void parseLineSecondRun(char *currLine, SymbolNode symbolTable, short memoryArra
 
             if (parseCommand(cmdName, currCmd))
             {
-                // parse the instruction and compute L
+                /*// parse the instruction and compute L*/
                 short L = parseInstructionLineOperands(currLine, currCmd, symbolTable, memoryArray, externList);
                 secondRunIC = secondRunIC + L;
             }
@@ -110,7 +106,7 @@ int AddOperandWordToMemory(Operand *operand, short *currWord, int *L, int wasReg
         case symbol: {
             *currWord = BIT_MASK_FOR_WORD_SIZE & (operand->value << EXTRA_MEMORY_WORD_OFFSET | operand->are << ARE_WORD_OFFSET);
             memoryArray[secondRunIC + *L] = *currWord;
-            // Adding to extern table if needed
+            /*// Adding to extern table if needed*/
             if(operand->are == ext)
             {
                 externList = addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
@@ -123,7 +119,7 @@ int AddOperandWordToMemory(Operand *operand, short *currWord, int *L, int wasReg
             short fieldWord = operand->fieldValue << EXTRA_MEMORY_WORD_OFFSET;
             memoryArray[secondRunIC + *L] = *currWord;
             memoryArray[secondRunIC + *L +1] = fieldWord;
-            // Adding to extern table if needed
+            /*// Adding to extern table if needed*/
             if(operand->are == ext)
             {
                 externList = addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
@@ -189,7 +185,7 @@ short parseInstructionLineOperands(char *currLine, Command *currCmd, SymbolNode 
         }
     }
 
-    // Parse second operand if needed
+    /*// Parse second operand if needed*/
     if (currCmd->operandCount == 2) {
         char *destOperandString = strtok(NULL, ", \t\n");
         if(destOperandString != NULL) {

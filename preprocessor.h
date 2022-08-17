@@ -1,7 +1,3 @@
-//
-// Created by dekke on 05/08/2022.
-//
-
 #ifndef MAMAN14_PREPROCESSOR_H
 #define MAMAN14_PREPROCESSOR_H
 
@@ -27,4 +23,4 @@ void AddMacroNameToTable(char line[], char *currMacroName);
 void AddLineToMacroContent(char line[], char *currMacroContent);
 int checkIfLineIsADefinedMacro(char line[], MacroNode macroList, FILE *amSourceFile);
 
-#endif //MAMAN14_PREPROCESSOR_H
+#endif

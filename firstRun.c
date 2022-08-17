@@ -1,6 +1,3 @@
-//
-// Created by dekke on 08/08/2022.
-//
 #include "string.h"
 #include "firstRun.h"
 
@@ -8,7 +5,7 @@ short IC = 0;
 short DC = 0;
 int firstRunLC = 0;
 const int isFirstRun = 1;
-int isFirstRunValid = 1; // Where any errors found
+int isFirstRunValid = 1; /*// Where any errors found*/
 
 void appendToDataArray(short data, short dataArray[])
 {
@@ -18,7 +15,7 @@ void appendToDataArray(short data, short dataArray[])
 
 int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArray[])
 {
-    // Initializing the memory arrays and counters
+    /*// Initializing the memory arrays and counters*/
     IC = 0;
     DC = 0;
     firstRunLC = 0;
@@ -37,7 +34,7 @@ int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArr
 
     if(isFirstRunValid)
     {
-        // Going over the symbol table and adding the first address in memory to the counter, plus adding the IC to the data symbols
+/*        // Going over the symbol table and adding the first address in memory to the counter, plus adding the IC to the data symbols*/
         SymbolNode p;
         p = symbolTable;
         while(p != NULL){
@@ -50,18 +47,16 @@ int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArr
             p = p->next;
         }
 
-        // Going over the DC and adding all the data to the memory array
+        /*// Going over the DC and adding all the data to the memory array*/
         int currDC = 0;
         while(currDC <= DC)
         {
             memoryArray[IC+currDC] = dataArray[currDC];
             currDC++;
         }
-      // and start run 2
         return DC;
     }
-
-    // errors where found - halt operation
+    /*// errors where found - halt operation*/
     return -1;
 }
 
@@ -76,16 +71,16 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray
         readFirstWordInLine(currLine, firstWordInCurrLine);
 
         if (isSymbolDeclaration(firstWordInCurrLine)) {
-            // Slice the symbol declaration from the line for further parsing as normal line
+            /*// Slice the symbol declaration from the line for further parsing as normal line*/
             currSymbol = strtok(firstWordInCurrLine, ":");
             currLine = strchr(currLine, ':')+1;
             isSymbolDeclared = 1;
         }
 
-        // Checking if the line is a guiding line or instruction
+        /*// Checking if the line is a guiding line or instruction*/
         if(isGuidingLine(currLine))
         {
-            // Classify the type of guiding line, if not found raise error
+            /*// Classify the type of guiding line, if not found raise error*/
             enum GuidingType guidingType;
             if (classifyGuidingType(currLine, &guidingType))
             {
@@ -96,7 +91,7 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray
                         parseExternLine(currLine, symbolTable);
                     }
                 }
-                // Data types Handling
+                /*// Data types Handling*/
                 else
                 {
                     if (isSymbolDeclared) {
@@ -161,7 +156,7 @@ void parseDataTypeLine(char *currLine, short dataArray[])
     int wasComma = 0;
     int stopSign = 0;
 
-    // Skip the .data declaration
+    /*// Skip the .data declaration*/
     while(isspace(currLine[lineIndex]))
     {
         lineIndex++;
@@ -202,7 +197,7 @@ void parseStringTypeLine(char *currLine, short dataArray[])
     char string[MAX_CHARS_IN_LINE];
     memset(string, '\0', MAX_CHARS_IN_LINE);
 
-    // Skip the .string declaration
+    /*// Skip the .string declaration*/
     while(isspace(currLine[lineIndex]))
     {
         lineIndex++;
@@ -243,7 +238,7 @@ void parseStructTypeLine(char *currLine, short dataArray[])
     char string[MAX_CHARS_IN_LINE];
     memset(string, '\0', MAX_CHARS_IN_LINE);
 
-    // Skip the .struct declaration
+    /*// Skip the .struct declaration*/
     while(isspace(currLine[lineIndex]))
     {
         lineIndex++;
@@ -264,12 +259,12 @@ void parseStructTypeLine(char *currLine, short dataArray[])
         lineIndex++;
     }
 
-    // append the read num to the array
+    /*// append the read num to the array*/
     int operandNum = stringToInt(currNum, firstRunLC);
     appendToDataArray((short) operandNum, dataArray);
 
-    // Start the string handling
-    lineIndex++; // For the un-read comma
+    /*// Start the string handling*/
+    lineIndex++; /*// For the un-read comma*/
     int isInString = 0;
 
     while(currLine[lineIndex] != '\n')
@@ -320,7 +315,7 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
     currInstructionWord |= absolute << ARE_WORD_OFFSET;
     currInstructionWord |= currCmd->opcode << OPCODE_WORD_OFFSET;
 
-    char *firstOperandString = strtok(currLine, ", \t\n"); // Dummy read of the instruction name
+    char *firstOperandString = strtok(currLine, ", \t\n"); /*// Dummy read of the instruction name*/
     firstOperandString = strtok(NULL, ", \t\n");
     char *destOperandString = strtok(NULL, ", \t\n");
 
@@ -429,7 +424,7 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
         }
     }
 
-    // Appending the first instruction word to the instruction array
+    /*// Appending the first instruction word to the instruction array*/
     memoryArray[IC] = currInstructionWord;
 
     return L;

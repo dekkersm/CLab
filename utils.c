@@ -1,6 +1,3 @@
-//
-// Created by dekke on 07/08/2022.
-//
 #include "utils.h"
 
 void readFirstWordInLine(char line[], char *word)
@@ -36,13 +33,13 @@ int stringToInt(char *number, int lineCounter)
 
     while (*number) {
         p = *number - '0';
-        if ( 0 <= p && 9 >= p) {// digit 0 to 9
+        if ( 0 <= p && 9 >= p) {
             intNumber = intNumber * 10 + p;
             number++;
         }
         else {
             printf("ERROR: not a digit where should be one! line:%d", lineCounter);
-            break;//not a digit
+            break;
         }
     }
 
@@ -88,7 +85,7 @@ char charValue(int num)
     }
 }
 
-// Utility function to reverse a string
+/*// Utility function to reverse a string*/
 void reverseStr(char *str)
 {
     int len = strlen(str);
@@ -101,14 +98,14 @@ void reverseStr(char *str)
     }
 }
 
-// Function to convert a given decimal number to base 32 of 10 bit width
+/*// Function to convert a given decimal number to base 32 of 10 bit width*/
 char* decTo32(char res[], short inputNum)
 {
-    int index = 0;  // Initialize index of result
+    int index = 0;  /*// Initialize index of result*/
     short base = 32;
 
-    // Convert input number is given base by repeatedly
-    // dividing it by base and taking remainder
+   /* // Convert input number is given base by repeatedly
+    // dividing it by base and taking remainder*/
     while (inputNum > 0)
     {
         res[index++] = charValue(inputNum % base);
@@ -124,7 +121,7 @@ char* decTo32(char res[], short inputNum)
     }
     res[index] = '\0';
 
-    // Reverse the result
+    /*// Reverse the result*/
     reverseStr(res);
 
     return res;

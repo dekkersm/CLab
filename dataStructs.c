@@ -1,7 +1,3 @@
-//
-// Created by dekke on 14/08/2022.
-//
-
 #include "dataStructs.h"
 
 SymbolNode createSymbolNode(){
@@ -22,7 +18,7 @@ SymbolNode addSymbolNode(SymbolNode head, char *name, short value, SymbolType ty
 
     if(head == NULL)
     {
-        head = temp;     //when linked list is empty
+        head = temp;
     }
     else
     {
@@ -30,12 +26,12 @@ SymbolNode addSymbolNode(SymbolNode head, char *name, short value, SymbolType ty
         while(p->next != NULL){
             if(!strcmp(p->name, name))
             {
-                // A similar symbol already exists
+                /*// A similar symbol already exists*/
                 return NULL;
             }
-            p = p->next;//traverse the list until p is the last node.The last node always points to NULL.
+            p = p->next;
         }
-        p->next = temp;//Point the previous last node to the new node created.
+        p->next = temp;
     }
     return head;
 }
@@ -58,7 +54,7 @@ SymbolNode getSymbolByName(SymbolNode head, char *name)
 ExternNode createExternNode(){
     ExternNode temp;
     temp = (ExternNode)malloc(sizeof(struct ExternTable));
-    temp->next = NULL;// make next point to NULL
+    temp->next = NULL;
     return temp;
 }
 
@@ -71,15 +67,15 @@ ExternNode addExternNode(ExternNode head, char *name, short value)
 
     if(head == NULL)
     {
-        head = temp;     //when linked list is empty
+        head = temp;
     }
     else
     {
         p  = head;
         while(p->next != NULL){
-            p = p->next;//traverse the list until p is the last node.The last node always points to NULL.
+            p = p->next;
         }
-        p->next = temp;//Point the previous last node to the new node created.
+        p->next = temp;
     }
     return head;
 }

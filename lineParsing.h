@@ -1,7 +1,3 @@
-//
-// Created by dekke on 16/08/2022.
-//
-
 #ifndef MAMAN14_LINEPARSING_H
 #define MAMAN14_LINEPARSING_H
 
@@ -16,4 +12,4 @@ int parseCommand(char *cmd, Command *currCmd);
 Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int lineCounter);
 int checkAddressingMethodValidity(AddressingMethod operandAM, AddressingMethod legalAM);
 
-#endif //MAMAN14_LINEPARSING_H
+#endif

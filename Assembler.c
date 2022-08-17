@@ -1,7 +1,3 @@
-//
-// Created by dekke on 16/08/2022.
-//
-
 #include "preprocessor.h"
 #include "firstRun.h"
 #include "secondRun.h"
@@ -117,19 +113,18 @@ void compileFile(char *fileName)
             printf("ERROR: can't open the source file %s\n", asFileName);
         }
         else {
-            // Pre-processor
+            /*Pre-processor*/
             ParseMacros(asFile, amFile);
             fclose(asFile);
             rewind(amFile);
 
-            // Initializing the symbol table to null and memory array
+            /*Initializing the symbol table to null and memory array*/
             SymbolNode symbolTable = createSymbolNode();
             short memoryArray[MEMORY_ARRAY_WORD_SIZE];
             memset(memoryArray, 0, sizeof(memoryArray));
 
             int DC = firstRunOnAssemblyFile(amFile, symbolTable, memoryArray);
             if(DC >= 0) {
-                // rewind the source file
                 rewind(amFile);
                 ExternNode externList = createExternNode();
 
