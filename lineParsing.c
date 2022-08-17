@@ -231,7 +231,6 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
             }
             else {
                 operandValue = stringToInt(operandNumValue, lineCounter);
-                printf("operand number is: %d, ", operandValue);
                 currOperand->value = operandValue;
                 currOperand->type = num;
                 currOperand->are = absolute;
@@ -251,7 +250,6 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
         short regNum = operand[wordIndex] - '0';
         if (0 <= regNum && regNum <= 7) {
             operandValue = regNum;
-            printf("reg name is:%d, ", operandValue);
             currOperand->value = operandValue;
             currOperand->type = reg;
             currOperand->are = absolute;
@@ -288,7 +286,6 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
                     currOperand->addressingMethod = (AddressingMethod) {0, 0, 1, 0};
                     currOperand->are = currSymbol->type == external ? ext : relocatable;
                     strcpy(currOperand->symbolName, operandSymbolName);
-                    printf("struct name is:%s, ", operandSymbolName);
                 }
                 else
                 {
@@ -298,7 +295,6 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
                         currOperand->fieldValue = structField;
                         currOperand->type = struc;
                         currOperand->addressingMethod = (AddressingMethod) {0, 0, 1, 0};
-                        printf("struct name is:%s, ", operandSymbolName);
                     }
                     else
                     {
@@ -322,7 +318,6 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
                 currOperand->addressingMethod = (AddressingMethod) {0, 1, 0, 0};
                 currOperand->are = currSymbol->type == external ? ext : relocatable;
                 strcpy(currOperand->symbolName, operandSymbolName);
-                printf("symbol name is:%s, ", operandSymbolName);
             }
             else
             {
@@ -331,7 +326,6 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int
                     currOperand->value = 0;
                     currOperand->type = symbol;
                     currOperand->addressingMethod = (AddressingMethod) {0, 1, 0, 0};
-                    printf("symbol name is:%s, ", operandSymbolName);
                 }
                 else
                 {

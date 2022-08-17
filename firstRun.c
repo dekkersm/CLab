@@ -32,7 +32,6 @@ int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArr
     while(fgets(currLine, MAX_CHARS_IN_LINE, amFile))
     {
         firstRunLC++;
-        printf("\nline :%d, ", firstRunLC);
         parseLineFirstRun(currLine, symbolTable, memoryArray, dataArray);
     }
 
@@ -48,7 +47,6 @@ int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArr
             else if(p->type == code) {
                 p->value += FIRST_ADDRESS_IN_OBJ_FILE;
             }
-            printf("\nname: %s, value: %d, type: %d, is: %d\n", p->name, p->value, p->type, p->isRelocatable);
             p = p->next;
         }
 
@@ -82,7 +80,6 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray
             currSymbol = strtok(firstWordInCurrLine, ":");
             currLine = strchr(currLine, ':')+1;
             isSymbolDeclared = 1;
-            printf("line symbol:%s, ", currSymbol);
         }
 
         // Checking if the line is a guiding line or instruction
@@ -142,8 +139,6 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray
 
             if (parseCommand(cmdName, currCmd))
             {
-                printf("instruction, ");
-
                 // parse the instruction and compute L
                 int L = parseInstructionLine(currLine, currCmd, symbolTable, memoryArray);
                 IC = IC + L;
@@ -177,7 +172,6 @@ void parseDataTypeLine(char *currLine, short dataArray[])
     {
         if(currLine[lineIndex] == ',' && !wasComma) {
             int operandNum = stringToInt(currNum, firstRunLC);
-            printf("num is: %d ", operandNum);
             appendToDataArray((short) operandNum, dataArray);
             wasComma = 1;
             memset(currNum, '\0', MAX_CHARS_IN_DATA_NUM);
@@ -190,7 +184,6 @@ void parseDataTypeLine(char *currLine, short dataArray[])
         else if(currLine[lineIndex] == '\n' && !wasComma)
         {
             int operandNum = stringToInt(currNum, firstRunLC);
-            printf("num is: %d ", operandNum);
             appendToDataArray((short) operandNum, dataArray);
             stopSign = 1;
         }
@@ -226,13 +219,11 @@ void parseStringTypeLine(char *currLine, short dataArray[])
         }
         else if(isInString && currLine[lineIndex] == '"')
         {
-            printf("/0 ");
             appendToDataArray('\0', dataArray);
             isInString = ~isInString;
         }
         else if(isInString)
         {
-            printf("%c ", currLine[lineIndex]);
             appendToDataArray(currLine[lineIndex], dataArray);
         }
         else if(!isspace(currLine[lineIndex]))
@@ -275,7 +266,6 @@ void parseStructTypeLine(char *currLine, short dataArray[])
 
     // append the read num to the array
     int operandNum = stringToInt(currNum, firstRunLC);
-    printf("struct num is: %d ", operandNum);
     appendToDataArray((short) operandNum, dataArray);
 
     // Start the string handling
@@ -290,13 +280,11 @@ void parseStructTypeLine(char *currLine, short dataArray[])
         }
         else if(isInString && currLine[lineIndex] == '"')
         {
-            printf("/0 ");
             appendToDataArray('\0', dataArray);
             isInString = ~isInString;
         }
         else if(isInString)
         {
-            printf("char:%c, ", currLine[lineIndex]);
             appendToDataArray(currLine[lineIndex], dataArray);
         }
         else if(!isspace(currLine[lineIndex]))
@@ -313,7 +301,6 @@ void parseExternLine(char *currLine, SymbolNode symbolTable)
     char *externOperand = getExternOrEntryOperand(currLine);
     if(externOperand)
     {
-        printf("extern param: %s, ", externOperand);
         if(!addSymbolNode(symbolTable, externOperand, 0, external, 0))
         {
             printf("ERROR: declaration of a symbol that already exists! line:%d\n", firstRunLC);
@@ -443,7 +430,6 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
     }
 
     // Appending the first instruction word to the instruction array
-    printf("word in memory %d", currInstructionWord);
     memoryArray[IC] = currInstructionWord;
 
     return L;

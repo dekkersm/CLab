@@ -60,7 +60,6 @@ void writeToExtFile(ExternNode externList, char *fileName)
 
         sprintf(line, "%s %s", p->name, decTo32(value, p->value));
         fprintf(extFile, "%s\n", line);
-        printf("ext: %s\n", line);
         p = p->next;
     }
 

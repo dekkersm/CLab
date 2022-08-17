@@ -21,7 +21,6 @@ int secondRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short instruct
     while(fgets(currLine, MAX_CHARS_IN_LINE, amFile))
     {
         secondRunLC++;
-        printf("\nline :%d, ", secondRunLC);
         parseLineSecondRun(currLine, symbolTable, instructionsArray, externList);
     }
 
@@ -76,8 +75,6 @@ void parseLineSecondRun(char *currLine, SymbolNode symbolTable, short memoryArra
 
             if (parseCommand(cmdName, currCmd))
             {
-                printf("instruction, ");
-
                 // parse the instruction and compute L
                 short L = parseInstructionLineOperands(currLine, currCmd, symbolTable, memoryArray, externList);
                 secondRunIC = secondRunIC + L;
@@ -89,10 +86,6 @@ void parseLineSecondRun(char *currLine, SymbolNode symbolTable, short memoryArra
             }
         }
     }
-    else
-    {
-        printf("empty line");
-    }
 }
 
 void parseEntryLine(char *currLine, SymbolNode symbolTable)
@@ -102,7 +95,6 @@ void parseEntryLine(char *currLine, SymbolNode symbolTable)
 
     if(currSymbol)
     {
-        printf("entry param: %s, ", entryOperand);
         currSymbol->type = entry;
     }
     else {
@@ -117,7 +109,6 @@ int AddOperandWordToMemory(Operand *operand, short *currWord, int *L, int wasReg
         case num:
         case symbol: {
             *currWord = BIT_MASK_FOR_WORD_SIZE & (operand->value << EXTRA_MEMORY_WORD_OFFSET | operand->are << ARE_WORD_OFFSET);
-            printf("op:%d, ", operand->value);
             memoryArray[secondRunIC + *L] = *currWord;
             // Adding to extern table if needed
             if(operand->are == ext)
@@ -164,7 +155,6 @@ int AddOperandWordToMemory(Operand *operand, short *currWord, int *L, int wasReg
         }
         default: break;
     }
-    printf("curr word is:%d, L is:%d, IC is:%d, ", *currWord, *L, secondRunIC);
     return wasRegister;
 }
 
