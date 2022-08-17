@@ -12,7 +12,6 @@
 
 void readFirstWordInLine(char line[], char *word);
 int stringToInt(char *number);
-int convertBase(int number,int base);
-void toBase32(int number, char *numIn32);
+char* decTo32(char res[], short inputNum);
 
 #endif //MAMAN14_UTILS_H
