@@ -21,7 +21,7 @@ void readFirstWordInLine(char line[], char *word)
     }
 }
 
-int stringToInt(char *number)
+int stringToInt(char *number, int lineCounter)
 {
     char p = *number;
     int intNumber = 0;
@@ -41,8 +41,8 @@ int stringToInt(char *number)
             number++;
         }
         else {
+            printf("ERROR: not a digit where should be one! line:%d", lineCounter);
             break;//not a digit
-            // TODO: error raise - not a digit where should be
         }
     }
 

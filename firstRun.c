@@ -8,6 +8,7 @@ short IC = 0;
 short DC = 0;
 int firstRunLC = 0;
 const int isFirstRun = 1;
+int isFirstRunValid = 1; // Where any errors found
 
 void appendToDataArray(short data, short dataArray[])
 {
@@ -15,14 +16,15 @@ void appendToDataArray(short data, short dataArray[])
     DC++;
 }
 
-int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable,short memoryArray[], short dataArray[])
+int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArray[])
 {
-    int isCodeValid = 1; // Where any errors found
-
     // Initializing the memory arrays and counters
     IC = 0;
     DC = 0;
     firstRunLC = 0;
+    isFirstRunValid = 1;
+    short dataArray[MEMORY_ARRAY_WORD_SIZE];
+    memset(dataArray, 0, sizeof(dataArray));
 
     char currLine[MAX_CHARS_IN_LINE];
     memset(currLine , '\0' , MAX_CHARS_IN_LINE);
@@ -34,7 +36,7 @@ int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable,short memoryArra
         parseLineFirstRun(currLine, symbolTable, memoryArray, dataArray);
     }
 
-    if(isCodeValid)
+    if(isFirstRunValid)
     {
         // Going over the symbol table and adding the first address in memory to the counter, plus adding the IC to the data symbols
         SymbolNode p;
@@ -101,7 +103,11 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray
                 else
                 {
                     if (isSymbolDeclared) {
-                        addSymbolNode(symbolTable, currSymbol, DC, data, 1);
+                        if(!addSymbolNode(symbolTable, currSymbol, DC, data, 1))
+                        {
+                            printf("ERROR: declaration of a symbol that already exists! line:%d\n", firstRunLC);
+                            isFirstRunValid = 0;
+                        }
                     }
 
                     switch (guidingType) {
@@ -114,13 +120,18 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray
             }
             else
             {
-                // TODO: ERROR invalid guiding line
+                printf("ERROR: guiding line not valid! line:%d\n", firstRunLC);
+                isFirstRunValid = 0;
             }
         }
         else
         {
             if (isSymbolDeclared) {
-                addSymbolNode(symbolTable, currSymbol, IC, code, 1);
+                if(!addSymbolNode(symbolTable, currSymbol, IC, code, 1))
+                {
+                    printf("ERROR: declaration of a symbol that already exists! line:%d\n", firstRunLC);
+                    isFirstRunValid = 0;
+                }
             }
 
             char cmdName[SYMBOL_MAX_CHAR_LENGTH];
@@ -139,13 +150,10 @@ void parseLineFirstRun(char *currLine, SymbolNode symbolTable, short memoryArray
             }
             else
             {
-                // TODO: error in the cmd name
+                printf("ERROR: unrecognized command name! line:%d\n", firstRunLC);
+                isFirstRunValid = 0;
             }
         }
-    }
-    else
-    {
-        printf("empty line");
     }
 }
 
@@ -168,7 +176,7 @@ void parseDataTypeLine(char *currLine, short dataArray[])
     while(!stopSign)
     {
         if(currLine[lineIndex] == ',' && !wasComma) {
-            int operandNum = stringToInt(currNum);
+            int operandNum = stringToInt(currNum, firstRunLC);
             printf("num is: %d ", operandNum);
             appendToDataArray((short) operandNum, dataArray);
             wasComma = 1;
@@ -181,15 +189,15 @@ void parseDataTypeLine(char *currLine, short dataArray[])
         }
         else if(currLine[lineIndex] == '\n' && !wasComma)
         {
-            int operandNum = stringToInt(currNum);
+            int operandNum = stringToInt(currNum, firstRunLC);
             printf("num is: %d ", operandNum);
             appendToDataArray((short) operandNum, dataArray);
             stopSign = 1;
         }
         else if(!isspace(currLine[lineIndex]))
         {
-            printf("ERROR in data ");
-            // TODO: ERROR RAISE
+            printf("ERROR: problematic data declaration! line:%d\n", firstRunLC);
+            isFirstRunValid = 0;
         }
         lineIndex++;
     }
@@ -229,8 +237,8 @@ void parseStringTypeLine(char *currLine, short dataArray[])
         }
         else if(!isspace(currLine[lineIndex]))
         {
-            printf("ERROR in string ");
-            // TODO: error raise
+            printf("ERROR: problematic string declaration! line:%d\n", firstRunLC);
+            isFirstRunValid = 0;
         }
         lineIndex++;
     }
@@ -259,13 +267,14 @@ void parseStructTypeLine(char *currLine, short dataArray[])
         }
         else if(!isspace(currLine[lineIndex]))
         {
-            //error raise
+            printf("ERROR: struct declaration first field wasn't found! line:%d\n", firstRunLC);
+            isFirstRunValid = 0;
         }
         lineIndex++;
     }
 
     // append the read num to the array
-    int operandNum = stringToInt(currNum);
+    int operandNum = stringToInt(currNum, firstRunLC);
     printf("struct num is: %d ", operandNum);
     appendToDataArray((short) operandNum, dataArray);
 
@@ -292,8 +301,8 @@ void parseStructTypeLine(char *currLine, short dataArray[])
         }
         else if(!isspace(currLine[lineIndex]))
         {
-            printf("ERROR in struct string");
-            // TODO: error raise
+            printf("ERROR: struct declaration second field wasn't found! line:%d\n", firstRunLC);
+            isFirstRunValid = 0;
         }
         lineIndex++;
     }
@@ -305,9 +314,16 @@ void parseExternLine(char *currLine, SymbolNode symbolTable)
     if(externOperand)
     {
         printf("extern param: %s, ", externOperand);
-        addSymbolNode(symbolTable, externOperand, 0, external, 0);
+        if(!addSymbolNode(symbolTable, externOperand, 0, external, 0))
+        {
+            printf("ERROR: declaration of a symbol that already exists! line:%d\n", firstRunLC);
+            isFirstRunValid = 0;
+        }
     }
-    // TODO: error raise on extern dont have operand
+    else {
+        printf("ERROR: Extern don't have operand! line:%d\n", firstRunLC);
+        isFirstRunValid = 0;
+    }
 }
 
 int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTable, short memoryArray[])
@@ -321,11 +337,19 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
     firstOperandString = strtok(NULL, ", \t\n");
     char *destOperandString = strtok(NULL, ", \t\n");
 
-    // TODO: Error raise in case operand count is wrong
     switch (currCmd->operandCount) {
-        case 0: if(firstOperandString || destOperandString) { printf("error");} break;
-        case 1: if(!firstOperandString || destOperandString) { printf("error");} break;
-        case 2: if(!firstOperandString || !destOperandString) { printf("error");} break;
+        case 0: if(firstOperandString || destOperandString) {
+                printf("ERROR: command operand count should be 0! line:%d\n", firstRunLC);
+                isFirstRunValid = 0;}
+                break;
+        case 1: if(!firstOperandString || destOperandString) {
+                printf("ERROR: command operand count should be 1! line:%d\n", firstRunLC);
+                isFirstRunValid = 0;}
+                break;
+        case 2: if(!firstOperandString || !destOperandString) {
+                printf("ERROR: command operand count should be 2! line:%d\n", firstRunLC);
+                isFirstRunValid = 0;}
+                break;
         default: break;
     }
 
@@ -334,63 +358,87 @@ int parseInstructionLine(char *currLine, Command *currCmd, SymbolNode symbolTabl
     int wasRegister = 0;
 
     if(firstOperandString != NULL) {
-        firstOperand = parseOperand(firstOperandString, symbolTable, isFirstRun);
-        if(checkAddressingMethodValidity(firstOperand->addressingMethod,
-                                         (currCmd->operandCount == 2 ?
-                                         currCmd->sourceOpLegalAddressMethods :
-                                         currCmd->destOpLegalAddressMethods)))
-        {
-            short addressingMethod;
-            switch (firstOperand->type) {
-                case num : L+=1; addressingMethod = 0; break;
-                case symbol: L+=1; addressingMethod = 1; break;
-                case struc: L+=2; addressingMethod = 2; break;
-                case reg:
-                {
-                    L+=1;
-                    addressingMethod = 3;
-                    wasRegister = 1;
-                    break;
+        firstOperand = parseOperand(firstOperandString, symbolTable, isFirstRun, firstRunLC);
+        if(firstOperand) {
+            if (checkAddressingMethodValidity(firstOperand->addressingMethod,
+                                              (currCmd->operandCount == 2 ?
+                                               currCmd->sourceOpLegalAddressMethods :
+                                               currCmd->destOpLegalAddressMethods))) {
+                short addressingMethod;
+                switch (firstOperand->type) {
+                    case num :
+                        L += 1;
+                        addressingMethod = 0;
+                        break;
+                    case symbol:
+                        L += 1;
+                        addressingMethod = 1;
+                        break;
+                    case struc:
+                        L += 2;
+                        addressingMethod = 2;
+                        break;
+                    case reg: {
+                        L += 1;
+                        addressingMethod = 3;
+                        wasRegister = 1;
+                        break;
+                    }
+                    default:
+                        break;
                 }
-                default: break;
-            }
 
-            if(currCmd->operandCount == 2) {
-                currInstructionWord |= addressingMethod << SRC_OPERAND_WORD_OFFSET;
-            }
-            else if(currCmd->operandCount == 1)
-            {
-                currInstructionWord |= addressingMethod << DEST_OPERAND_WORD_OFFSET;
+                if (currCmd->operandCount == 2) {
+                    currInstructionWord |= addressingMethod << SRC_OPERAND_WORD_OFFSET;
+                } else if (currCmd->operandCount == 1) {
+                    currInstructionWord |= addressingMethod << DEST_OPERAND_WORD_OFFSET;
+                }
+            } else {
+                printf("ERROR: illegal operand addressing method! line:%d\n", firstRunLC);
+                isFirstRunValid = 0;
             }
         }
         else
         {
-            // TODO: illegal operand addressing method
+            isFirstRunValid = 0;
         }
     }
 
     if(destOperandString != NULL) {
-        destOperand = parseOperand(destOperandString, symbolTable, isFirstRun);
-        if(checkAddressingMethodValidity(destOperand->addressingMethod, currCmd->destOpLegalAddressMethods))
-        {
-            short addressingMethod;
-            switch (destOperand->type) {
-                case num : L+=1; addressingMethod = 0; break;
-                case symbol: L+=1; addressingMethod = 1; break;
-                case struc: L+=2; addressingMethod = 2; break;
-                case reg:
-                {
-                    addressingMethod = 3;
-                    if(!wasRegister) L+=1;
-                    break;
+        destOperand = parseOperand(destOperandString, symbolTable, isFirstRun, firstRunLC);
+        if(destOperand) {
+            if (checkAddressingMethodValidity(destOperand->addressingMethod, currCmd->destOpLegalAddressMethods)) {
+                short addressingMethod;
+                switch (destOperand->type) {
+                    case num :
+                        L += 1;
+                        addressingMethod = 0;
+                        break;
+                    case symbol:
+                        L += 1;
+                        addressingMethod = 1;
+                        break;
+                    case struc:
+                        L += 2;
+                        addressingMethod = 2;
+                        break;
+                    case reg: {
+                        addressingMethod = 3;
+                        if (!wasRegister) L += 1;
+                        break;
+                    }
+                    default:
+                        break;
                 }
-                default: break;
+                currInstructionWord |= addressingMethod << DEST_OPERAND_WORD_OFFSET;
+            } else {
+                printf("ERROR: illegal operand addressing method! line:%d\n", firstRunLC);
+                isFirstRunValid = 0;
             }
-            currInstructionWord |= addressingMethod << DEST_OPERAND_WORD_OFFSET;
         }
         else
         {
-            // TODO: illegal operand addressing method
+            isFirstRunValid = 0;
         }
     }
 

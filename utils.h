@@ -11,7 +11,7 @@
 #include "string.h"
 
 void readFirstWordInLine(char line[], char *word);
-int stringToInt(char *number);
+int stringToInt(char *number, int lineCounter);
 char* decTo32(char res[], short inputNum);
 
 #endif //MAMAN14_UTILS_H

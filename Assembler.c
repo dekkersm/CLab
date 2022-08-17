@@ -11,7 +11,7 @@ void writeToObjFile(int IC, int DC, short memoryArray[], char *fileName)
 {
     FILE *objFile;
     objFile = fopen(fileName,"w");
-    if(fileName == NULL)
+    if(objFile == NULL)
     {
         printf("ERROR: can't open the file: \n \n");
     }
@@ -38,25 +38,29 @@ void writeToObjFile(int IC, int DC, short memoryArray[], char *fileName)
 
 void writeToExtFile(ExternNode externList, char *fileName)
 {
-    // TODO: don't create if no extern
-    FILE *extFile;
-    extFile = fopen(fileName,"w");
-    if(fileName == NULL)
-    {
-        printf("ERROR: can't open the file: \n \n");
-    }
+    FILE *extFile = NULL;
 
     char line[MAX_CHARS_IN_LINE];
     char value[MAX_CHARS_IN_LINE];
 
     ExternNode p;
-    p = externList;
+    p = externList->next;
     while(p != NULL){
+        if(extFile == NULL)
+        {
+            // Create the file if not created yet
+            extFile = fopen(fileName,"w");
+            if(extFile == NULL)
+            {
+                printf("ERROR: can't open the file: \n \n");
+            }
+        }
         memset(line, '\0', MAX_CHARS_IN_LINE);
         memset(value, '\0', MAX_CHARS_IN_LINE);
 
         sprintf(line, "%s %s", p->name, decTo32(value, p->value));
         fprintf(extFile, "%s\n", line);
+        printf("ext: %s\n", line);
         p = p->next;
     }
 
@@ -65,13 +69,7 @@ void writeToExtFile(ExternNode externList, char *fileName)
 
 void writeToEntFile(SymbolNode symbolTable, char *fileName)
 {
-    // TODO: don't create if no entry
-    FILE *entFile;
-    entFile = fopen(fileName,"w");
-    if(fileName == NULL)
-    {
-        printf("ERROR: can't open the file: \n \n");
-    }
+    FILE *entFile = NULL;
 
     char line[MAX_CHARS_IN_LINE];
     char value[MAX_CHARS_IN_LINE];
@@ -83,6 +81,13 @@ void writeToEntFile(SymbolNode symbolTable, char *fileName)
         memset(value, '\0', MAX_CHARS_IN_LINE);
 
         if(p->type == entry) {
+            if(entFile == NULL) { // Create file if not exists
+                entFile = fopen(fileName, "w");
+                if (entFile == NULL) {
+                    printf("ERROR: can't open the file: \n \n");
+                }
+            }
+
             sprintf(line, "%s %s", p->name, decTo32(value, p->value));
             fprintf(entFile, "%s\n", line);
         }
@@ -92,9 +97,61 @@ void writeToEntFile(SymbolNode symbolTable, char *fileName)
     fclose(entFile);
 }
 
-void compileFile(char *arg)
+void compileFile(char *fileName)
 {
+    FILE *asFile;
+    char asFileName[MAX_CHARS_IN_FILE_NAME];
+    sprintf(asFileName,"%s.as", fileName);
 
+    asFile = fopen(asFileName,"r");
+    if(asFile == NULL)
+    {
+        printf("ERROR: can't open the source file %s\n", asFileName);
+    }
+    else {
+        FILE *amFile;
+        char amFileName[MAX_CHARS_IN_FILE_NAME];
+        sprintf(amFileName,"%s.am", fileName);
+        amFile = fopen(amFileName,"w+");
+        if(amFile == NULL)
+        {
+            printf("ERROR: can't open the source file %s\n", asFileName);
+        }
+        else {
+            // Pre-processor
+            ParseMacros(asFile, amFile);
+            fclose(asFile);
+            rewind(amFile);
+
+            // Initializing the symbol table to null and memory array
+            SymbolNode symbolTable = createSymbolNode();
+            short memoryArray[MEMORY_ARRAY_WORD_SIZE];
+            memset(memoryArray, 0, sizeof(memoryArray));
+
+            int DC = firstRunOnAssemblyFile(amFile, symbolTable, memoryArray);
+            if(DC >= 0) {
+                // rewind the source file
+                rewind(amFile);
+                ExternNode externList = createExternNode();
+
+                int IC = secondRunOnAssemblyFile(amFile, symbolTable, memoryArray, externList);
+                if(IC >= 0){
+                    char objFileName[MAX_CHARS_IN_FILE_NAME];
+                    char extFileName[MAX_CHARS_IN_FILE_NAME];
+                    char entFileName[MAX_CHARS_IN_FILE_NAME];
+                    sprintf(objFileName,"%s.ob", fileName);
+                    sprintf(extFileName,"%s.ext", fileName);
+                    sprintf(entFileName,"%s.ent", fileName);
+
+                    writeToObjFile(IC, DC, memoryArray, objFileName);
+                    writeToExtFile(externList, extFileName);
+                    writeToEntFile(symbolTable, entFileName);
+
+                    fclose(amFile);
+                }
+            }
+        }
+    }
 }
 
 void assembler(int argc, char *argv[])
@@ -114,62 +171,5 @@ void assembler(int argc, char *argv[])
 }
 
 int main(int argc, char *argv[]) {
-    int i = ParseMacros(argv[1]);
-    FILE *sourceFile;
-    sourceFile = fopen("C:\\May\\OpenU\\CLab\\maman14\\Docs\\source.txt.am","r");
-    if(sourceFile == NULL)
-    {
-        printf("ERROR: can't open the file: \n \n");
-        return 1;
-    }
-
-    // Initializing the symbol table to null
-    SymbolNode table = NULL;
-    table = addSymbolNode(table, "!", 0, external, 0);
-
-    short instructionsArray[MEMORY_ARRAY_WORD_SIZE];
-    short dataArray[MEMORY_ARRAY_WORD_SIZE];
-    memset(instructionsArray, 0, sizeof(instructionsArray));
-    memset(dataArray, 0, sizeof(dataArray));
-
-    int DC = firstRunOnAssemblyFile(sourceFile, table, instructionsArray, dataArray);
-
-    int j;
-    for (j = 0; j < MEMORY_ARRAY_WORD_SIZE; ++j) {
-        printf("array %d: %d\n", j, instructionsArray[j]);
-    }
-
-    // rewind the source file
-    rewind(sourceFile);
-
-    ExternNode externList = NULL;
-    externList = addExternNode(externList, "k", 0);
-
-    int IC = secondRunOnAssemblyFile(sourceFile, table, instructionsArray, externList);
-
-
-    ExternNode p;
-    p = externList;
-    while(p != NULL){
-        printf("name:%s, val:%d \n", p->name, p->value);
-        p = p->next;
-    }
-
-    for (j = 0; j < MEMORY_ARRAY_WORD_SIZE; ++j) {
-        printf("array %d: %d\n", j+1, instructionsArray[j]);
-    }
-
-    char res[100];
-    printf("%s\n", decTo32(res, 123));
-
-    char *objFileName = "C:\\May\\OpenU\\CLab\\maman14\\Docs\\source.txt.obj";
-    char *extFileName = "C:\\May\\OpenU\\CLab\\maman14\\Docs\\source.txt.ext";
-    char *entFileName = "C:\\May\\OpenU\\CLab\\maman14\\Docs\\source.txt.ent";
-    writeToObjFile(IC, DC, instructionsArray, objFileName);
-    writeToExtFile(externList, extFileName);
-    writeToEntFile(table, entFileName);
-
-    fclose(sourceFile);
-
-//    assembler(argc, argv);
+    assembler(argc, argv);
 }

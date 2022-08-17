@@ -6,17 +6,14 @@
 
 short secondRunIC = 0;
 int secondRunLC = 0;
-int externCount = 0;
+int isCodeValid = 1;
 const isSecondRun = 1;
 
 int secondRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short instructionsArray[], ExternNode externList)
 {
-    int isCodeValid = 1; // Where any errors found
-
     // Initializing the counters
     secondRunIC = 0;
     secondRunLC = 0;
-    externCount = 0;
 
     char currLine[MAX_CHARS_IN_LINE];
     memset(currLine , '\0' , MAX_CHARS_IN_LINE);
@@ -65,7 +62,8 @@ void parseLineSecondRun(char *currLine, SymbolNode symbolTable, short memoryArra
             }
             else
             {
-                // TODO: ERROR invalid guiding line
+                printf("ERROR: guiding line not valid! line:%d", secondRunLC);
+                isCodeValid = 0;
             }
         }
         else
@@ -86,7 +84,8 @@ void parseLineSecondRun(char *currLine, SymbolNode symbolTable, short memoryArra
             }
             else
             {
-                // TODO: error in the cmd name
+                printf("ERROR: unrecognized command name! line:%d", secondRunLC);
+                isCodeValid = 0;
             }
         }
     }
@@ -107,7 +106,8 @@ void parseEntryLine(char *currLine, SymbolNode symbolTable)
         currSymbol->type = entry;
     }
     else {
-        // TODO: error raise entry of non existing symbol
+        printf("ERROR: entry declaration of non-existing symbol! line:%d", secondRunLC);
+        isCodeValid = 0;
     }
 }
 
@@ -122,7 +122,7 @@ int AddOperandWordToMemory(Operand *operand, short *currWord, int *L, int wasReg
             // Adding to extern table if needed
             if(operand->are == ext)
             {
-                addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
+                externList = addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
             }
             *L += 1;
             break;
@@ -135,7 +135,7 @@ int AddOperandWordToMemory(Operand *operand, short *currWord, int *L, int wasReg
             // Adding to extern table if needed
             if(operand->are == ext)
             {
-                addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
+                externList = addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
             }
             *L += 2;
             break;
@@ -180,17 +180,22 @@ short parseInstructionLineOperands(char *currLine, Command *currCmd, SymbolNode 
 
     if(firstOperandString != NULL) {
         int isDestOperand = currCmd->operandCount == 1;
-        Operand *firstOperand = parseOperand(firstOperandString, symbolTable, 0);
-        if(checkAddressingMethodValidity(firstOperand->addressingMethod,
-                                         ( isDestOperand ?
-                                           currCmd->destOpLegalAddressMethods :
-                                           currCmd->sourceOpLegalAddressMethods)))
-        {
-            wasRegister = AddOperandWordToMemory(firstOperand, &currWord, &L, wasRegister, isDestOperand, memoryArray, externList);
+        Operand *firstOperand = parseOperand(firstOperandString, symbolTable, 0, secondRunLC);
+        if(firstOperand) {
+            if (checkAddressingMethodValidity(firstOperand->addressingMethod,
+                                              (isDestOperand ?
+                                               currCmd->destOpLegalAddressMethods :
+                                               currCmd->sourceOpLegalAddressMethods))) {
+                wasRegister = AddOperandWordToMemory(firstOperand, &currWord, &L, wasRegister, isDestOperand,
+                                                     memoryArray, externList);
+            } else {
+                printf("ERROR: illegal operand addressing method! line:%d", secondRunLC);
+                isCodeValid = 0;
+            }
         }
         else
         {
-            // TODO: illegal operand addressing method
+            isCodeValid = 0;
         }
     }
 
@@ -198,14 +203,18 @@ short parseInstructionLineOperands(char *currLine, Command *currCmd, SymbolNode 
     if (currCmd->operandCount == 2) {
         char *destOperandString = strtok(NULL, ", \t\n");
         if(destOperandString != NULL) {
-            Operand *destOperand = parseOperand(destOperandString, symbolTable, 0);
-            if(checkAddressingMethodValidity(destOperand->addressingMethod, currCmd->destOpLegalAddressMethods))
-            {
-                AddOperandWordToMemory(destOperand, &currWord, &L, wasRegister, 1, memoryArray, externList);
+            Operand *destOperand = parseOperand(destOperandString, symbolTable, 0, secondRunLC);
+            if(destOperand) {
+                if (checkAddressingMethodValidity(destOperand->addressingMethod, currCmd->destOpLegalAddressMethods)) {
+                    AddOperandWordToMemory(destOperand, &currWord, &L, wasRegister, 1, memoryArray, externList);
+                } else {
+                    printf("ERROR: illegal operand addressing method! line:%d", secondRunLC);
+                    isCodeValid = 0;
+                }
             }
             else
             {
-                // TODO: illegal operand addressing method
+                isCodeValid = 0;
             }
         }
     }

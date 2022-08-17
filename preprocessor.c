@@ -3,6 +3,49 @@
 //
 #include "preprocessor.h"
 
+MacroNode createMacroNode(){
+    MacroNode temp;
+    temp = (MacroNode)malloc(sizeof(struct MacroList));
+    temp->next = NULL;
+    return temp;
+}
+
+MacroNode addMacroNode(MacroNode head, char *name, char *content)
+{
+    MacroNode temp,p;
+    temp = createMacroNode();
+    strcpy(temp->name, name);
+    strcpy(temp->content, content);
+
+    if(head == NULL)
+    {
+        head = temp;     //when linked list is empty
+    }
+    else
+    {
+        p  = head;
+        while(p->next != NULL){
+            p = p->next;//traverse the list until p is the last node.The last node always points to NULL.
+        }
+        p->next = temp;//Point the previous last node to the new node created.
+    }
+    return head;
+}
+
+MacroNode getMacroByName(MacroNode head, char *name) {
+    MacroNode p;
+    p = head;
+    while(p != NULL){
+        if(!strcmp(p->name, name))
+        {
+            return p;
+        }
+        p = p->next;
+    }
+
+    return NULL;
+}
+
 // Returns 1 if any macro statement is found, and changes the given macro flag
 int CheckForMacroStatement(char line[], int *isMacroDefinition)
 {
@@ -22,91 +65,60 @@ int CheckForMacroStatement(char line[], int *isMacroDefinition)
     return 0;
 }
 
-int ParseMacros(char *sourceFileName)
+void ParseMacros(FILE *asFile, FILE *amFile)
 {
     char line [MAX_CHARS_IN_LINE];
     memset(line , '\0' , MAX_CHARS_IN_LINE);
 
     // The head of the macro list
-    struct MacroNode* head = NULL;
-    head = (struct MacroNode*)malloc(sizeof(struct MacroNode));
-    memset(head->name, '\0', MAX_CHARS_IN_LINE);
-    memset(head->content, '\0', MAX_CHARS_IN_LINE);
-    head->next = NULL;
-
-    struct MacroNode* realHead = head;
-
-    // Opening the original source file
-    FILE *sourceFile;
-    sourceFile = fopen(sourceFileName,"r");
-    if(sourceFile == NULL)
-    {
-        printf("ERROR: can't open the file: %s \n \n" , sourceFileName);
-        return 1;
-    }
-
-    // Creating the new file
-    FILE *amSourceFile;
-    char amFileName[MAX_CHARS_IN_FILE_NAME];
-    strcpy(amFileName, sourceFileName);
-    strncat(amFileName, ".am", 4);
-    amSourceFile = fopen(amFileName,"w");
+    MacroNode macroList = NULL;
 
     int isMacroDefinition = 0;
 
-    // Temp var to hold the current macro being saved to table
-    struct MacroNode* currMacro = NULL;
-    currMacro = (struct MacroNode*)malloc(sizeof(struct MacroNode));
-    memset(currMacro->content, '\0', MAX_CHARS_IN_LINE);
+    char currMacroName[MAX_CHARS_IN_LINE];
+    char currMacroContent[MAX_CHARS_IN_LINE];
+    memset(currMacroName, '\0', MAX_CHARS_IN_LINE);
+    memset(currMacroContent, '\0', MAX_CHARS_IN_LINE);
 
-    while(fgets(line, MAX_CHARS_IN_LINE, sourceFile))
+    while(fgets(line, MAX_CHARS_IN_LINE, asFile))
     {
         if(CheckForMacroStatement(line, &isMacroDefinition))
         {
             // If a macro statement was found
             if(isMacroDefinition)
             {
-                AddMacroNameToTable(line, currMacro);
+                AddMacroNameToTable(line, currMacroName);
             }
             else
             {
                 // End of macro, Add to the macro list
-                struct MacroNode* temp = NULL;
-                temp = (struct MacroNode*)malloc(sizeof(struct MacroNode));
-                strcpy(temp->name, currMacro->name);
-                strcpy(temp->content, currMacro->content);
-                head->next = temp;
-                head = temp;
+                macroList = addMacroNode(macroList, currMacroName, currMacroContent);
 
                 // Resetting the curr macro
-                memset(currMacro->name, '\0', MAX_CHARS_IN_LINE);
-                memset(currMacro->content, '\0', MAX_CHARS_IN_LINE);
+                memset(currMacroName, '\0', MAX_CHARS_IN_LINE);
+                memset(currMacroContent, '\0', MAX_CHARS_IN_LINE);
             }
         }
         else
         {
             // If the line is a regular non-macro statement
             if (isMacroDefinition) {
-                AddLineToMacroContent(line, currMacro);
+                AddLineToMacroContent(line, currMacroContent);
             }
             else {
-                if (!checkIfLineIsADefinedMacro(line, realHead, amSourceFile))
+                if (!checkIfLineIsADefinedMacro(line, macroList, amFile))
                 {
                     // Adding the line as is to the .am file if it is not a macro name
-                    fprintf(amSourceFile, "%s", line);
+                    fprintf(amFile, "%s", line);
                 }
             }
         }
     }
 
-    fprintf(amSourceFile, "%c", '\n'); // new line in end of file
-    fclose(sourceFile);
-    fclose(amSourceFile);
-
-    return 0;
+    fprintf(amFile, "%c", '\n'); // new line in end of file
 }
 
-void AddMacroNameToTable(char line[], struct MacroNode *currMacro)
+void AddMacroNameToTable(char line[], char *currMacroName)
 {
     const char whitespace[3] = " \t\n";
     char *token;
@@ -116,31 +128,25 @@ void AddMacroNameToTable(char line[], struct MacroNode *currMacro)
     {
         token = strtok(NULL, whitespace);
     }
-    strcpy(currMacro->name, token);
+    strcpy(currMacroName, token);
 }
 
-void AddLineToMacroContent(char line[], struct MacroNode *currMacro)
+void AddLineToMacroContent(char line[], char *currMacroContent)
 {
-    strncat(currMacro->content, line, MAX_CHARS_IN_LINE);
+    strncat(currMacroContent, line, MAX_CHARS_IN_LINE);
 }
 
-int checkIfLineIsADefinedMacro(char line[], struct MacroNode *macroListHead, FILE *amSourceFile)
+int checkIfLineIsADefinedMacro(char line[], MacroNode macroList, FILE *amSourceFile)
 {
     char firstWord[MAX_CHARS_IN_LINE];
     memset(firstWord , '\0' , MAX_CHARS_IN_LINE);
-
-    struct MacroNode* temp = macroListHead;
-
     readFirstWordInLine(line, firstWord);
 
-    while(temp!=NULL)
+    MacroNode temp = getMacroByName(macroList, firstWord);
+    if(temp!=NULL)
     {
-        if(!strcmp(temp->name, firstWord))
-        {
-            fprintf(amSourceFile, "%s", temp->content);
-            return 1;
-        }
-        temp = temp->next;
+        fprintf(amSourceFile, "%s", temp->content);
+        return 1;
     }
 
     return 0;
