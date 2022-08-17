@@ -69,7 +69,7 @@ void writeToExtFile(ExternNode externList, char *fileName)
 
 void writeToEntFile(SymbolNode symbolTable, char *fileName)
 {
-    FILE *entFile;
+    FILE *entFile = NULL;
 
     char line[MAX_CHARS_IN_LINE];
     char value[MAX_CHARS_IN_LINE];
@@ -77,16 +77,17 @@ void writeToEntFile(SymbolNode symbolTable, char *fileName)
     SymbolNode p;
     p = symbolTable;
     while(p != NULL){
-        if(entFile == NULL) {
-            entFile = fopen(fileName, "w");
-            if (entFile == NULL) {
-                printf("ERROR: can't open the file: \n \n");
-            }
-        }
         memset(line, '\0', MAX_CHARS_IN_LINE);
         memset(value, '\0', MAX_CHARS_IN_LINE);
 
         if(p->type == entry) {
+            if(entFile == NULL) { // Create file if not exists
+                entFile = fopen(fileName, "w");
+                if (entFile == NULL) {
+                    printf("ERROR: can't open the file: \n \n");
+                }
+            }
+
             sprintf(line, "%s %s", p->name, decTo32(value, p->value));
             fprintf(entFile, "%s\n", line);
         }

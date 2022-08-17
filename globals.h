@@ -10,11 +10,10 @@
 #define MAX_CHARS_IN_FILE_NAME 50
 #define MAX_CHARS_IN_DATA_NUM 6 // max num represented by 10 bits is 4 digits long + sign + \0
 #define SYMBOL_MAX_CHAR_LENGTH 30
-#define BIT_MASK_FOR_WORD_SIZE 1023
+#define BIT_MASK_FOR_WORD_SIZE 1023 // 10 lit bits
 
 // Memory globals
 #define FIRST_ADDRESS_IN_OBJ_FILE 100
-#define MEMORY_WORD_BIT_SIZE 10
 #define MEMORY_ARRAY_WORD_SIZE 256
 
 // Offsets for memory words
@@ -25,7 +24,5 @@
 #define EXTRA_MEMORY_WORD_OFFSET 2
 #define SRC_REGISTER_WORD_OFFSET 6
 #define DEST_REGISTER_WORD_OFFSET 2
-
-/* !,@,#,$,%,^,&,*,<,>,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v */
 
 #endif //MAMAN14_GLOBALS_H

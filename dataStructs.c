@@ -28,7 +28,11 @@ SymbolNode addSymbolNode(SymbolNode head, char *name, short value, SymbolType ty
     {
         p  = head;
         while(p->next != NULL){
-            // TODO: Check if name exists already
+            if(!strcmp(p->name, name))
+            {
+                // A similar symbol already exists
+                return NULL;
+            }
             p = p->next;//traverse the list until p is the last node.The last node always points to NULL.
         }
         p->next = temp;//Point the previous last node to the new node created.

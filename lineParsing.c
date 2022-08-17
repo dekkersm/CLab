@@ -201,7 +201,7 @@ int parseCommand(char *cmd, Command *currCmd)
     return success;
 }
 
-Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun)
+Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun, int lineCounter)
 {
     int wordIndex = 0;
     short operandValue;
@@ -226,10 +226,11 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun)
 
             if(operand[wordIndex] != '\0')
             {
-                //error not a num
+                printf("ERROR: not a number! line:%d\n", lineCounter);
+                return NULL;
             }
             else {
-                operandValue = stringToInt(operandNumValue);
+                operandValue = stringToInt(operandNumValue, lineCounter);
                 printf("operand number is: %d, ", operandValue);
                 currOperand->value = operandValue;
                 currOperand->type = num;
@@ -239,7 +240,8 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun)
         }
         else
         {
-            // error raise - invalid number operand
+            printf("ERROR: invalid number operand! line:%d\n", lineCounter);
+            return NULL;
         }
     }
         // Checking if the operand is a register
@@ -254,8 +256,10 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun)
             currOperand->type = reg;
             currOperand->are = absolute;
             currOperand->addressingMethod = (AddressingMethod) {0, 0, 0, 1};
-        } else {
-            // error invalid register number
+        }
+        else {
+            printf("ERROR: invalid register number! line:%d\n", lineCounter);
+            return NULL;
         }
     }
         // check if the operand is a symbol
@@ -298,13 +302,15 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun)
                     }
                     else
                     {
-                        // Error undefined struct
+                        printf("ERROR: usage of undefined struct! line:%d\n", lineCounter);
+                        return NULL;
                     }
                 }
             }
             else
             {
-                // error wrong struct field
+                printf("ERROR: invalid struct field! line:%d\n", lineCounter);
+                return NULL;
             }
         }
         else if(operand[wordIndex] == '\0')
@@ -329,13 +335,15 @@ Operand* parseOperand(char *operand, SymbolNode symbolTable, int isFirstRun)
                 }
                 else
                 {
-                    // Error undefined symbol
+                    printf("ERROR: usage of undefined symbol! line:%d\n", lineCounter);
+                    return NULL;
                 }
             }
         }
         else
         {
-            // Error, undefined operand name
+            printf("ERROR: undefined operand name! line:%d\n", lineCounter);
+            return NULL;
         }
     }
 
