@@ -122,7 +122,7 @@ int AddOperandWordToMemory(Operand *operand, short *currWord, int *L, int wasReg
             // Adding to extern table if needed
             if(operand->are == ext)
             {
-                addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
+                externList = addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
             }
             *L += 1;
             break;
@@ -135,7 +135,7 @@ int AddOperandWordToMemory(Operand *operand, short *currWord, int *L, int wasReg
             // Adding to extern table if needed
             if(operand->are == ext)
             {
-                addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
+                externList = addExternNode(externList, operand->symbolName, secondRunIC + *L + FIRST_ADDRESS_IN_OBJ_FILE);
             }
             *L += 2;
             break;

@@ -8,6 +8,7 @@ short IC = 0;
 short DC = 0;
 int firstRunLC = 0;
 const int isFirstRun = 1;
+int isCodeValid = 1; // Where any errors found
 
 void appendToDataArray(short data, short dataArray[])
 {
@@ -15,14 +16,14 @@ void appendToDataArray(short data, short dataArray[])
     DC++;
 }
 
-int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable,short memoryArray[], short dataArray[])
+int firstRunOnAssemblyFile(FILE *amFile, SymbolNode symbolTable, short memoryArray[])
 {
-    int isCodeValid = 1; // Where any errors found
-
     // Initializing the memory arrays and counters
     IC = 0;
     DC = 0;
     firstRunLC = 0;
+    short dataArray[MEMORY_ARRAY_WORD_SIZE];
+    memset(dataArray, 0, sizeof(dataArray));
 
     char currLine[MAX_CHARS_IN_LINE];
     memset(currLine , '\0' , MAX_CHARS_IN_LINE);
