@@ -8,7 +8,7 @@ int isEmptyOrCommentLine(char *currLine)
         return 1;
     }
 
-    while(isspace(currLine[lineIndex]))
+    while(isspace(currLine[lineIndex]) || currLine[lineIndex] == '\0')
     {
         if(currLine[lineIndex] == '\0')
             return 1;
